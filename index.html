@@ -1,0 +1,4875 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>校园植被身份证 | 探索校园植物世界</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&family=Caveat:wght@400;600;700&display=swap"
+          rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- 引入百度地图API -->
+    <script type="text/javascript"
+            src="https://api.map.baidu.com/api?v=3.0&ak=gKRg5w1OdVa4hkexo2mXWNT7A1OPAtsw"></script>
+
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2E7D32',
+                        secondary: '#4CAF50',
+                        accent: '#8BC34A',
+                        neutral: '#F5F5F5',
+                        dark: '#212121',
+                        vintage: {
+                            paper: '#f8f6f0',
+                            brown: '#5a4634',
+                            lightBrown: '#7d6b56',
+                            gold: '#a68a64',
+                            lightGold: '#e8e0d0'
+                        }
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                        playfair: ['Playfair Display', 'serif'],
+                        caveat: ['Caveat', 'cursive']
+                    },
+                },
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            /* 确保移动端菜单链接始终为黑色 */
+            #mobileMenu a {
+                color: #212121 !important;
+            }
+
+            #mobileMenu a:hover {
+                color: #2E7D32 !important;
+            }
+
+            .content-auto {
+                content-visibility: auto;
+            }
+
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .card-hover {
+                transition: all 0.3s ease;
+            }
+
+            .card-hover:hover {
+                transform: translateY(-5px);
+            }
+
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+
+            .gradient-overlay {
+                background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 100%);
+            }
+
+            .img-preview-transition {
+                transition: opacity 0.3s ease;
+            }
+
+            .map-marker {
+                transition: all 0.2s ease;
+            }
+
+            .map-marker:hover {
+                transform: scale(1.2);
+            }
+
+            .animate-pulse-slow {
+                animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            }
+
+            .dropzone {
+                border: 2px dashed #d1d5db;
+                border-radius: 0.5rem;
+                padding: 1.5rem;
+                text-align: center;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+
+            .dropzone:hover, .dropzone.dragover {
+                border-color: #2E7D32;
+                background-color: rgba(46, 125, 50, 0.05);
+            }
+
+            .dropzone.dragover {
+                transform: scale(1.02);
+            }
+
+            .preview-image {
+                width: 100%;
+                height: 120px;
+                object-fit: cover;
+                border-radius: 0.5rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .preview-container {
+                position: relative;
+                display: inline-block;
+                margin: 0.5rem;
+                width: calc(33.333% - 1rem);
+            }
+
+            .preview-remove {
+                position: absolute;
+                top: -0.5rem;
+                right: -0.5rem;
+                background: rgba(0, 0, 0, 0.7);
+                color: white;
+                border-radius: 50%;
+                width: 1.5rem;
+                height: 1.5rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                font-size: 0.8rem;
+            }
+
+            .map-selector {
+                position: relative;
+                height: 400px;
+                overflow: hidden;
+                border-radius: 0.5rem;
+                background-color: #f9fafb;
+            }
+
+            .map-selector .map-marker-select {
+                position: absolute;
+                width: 24px;
+                height: 24px;
+                background-color: #2E7D32;
+                border-radius: 50%;
+                border: 3px solid white;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+                cursor: pointer;
+                transform: translate(-50%, -50%);
+                z-index: 10;
+            }
+
+            .map-selector .map-marker-select:hover {
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+
+            .admin-actions {
+                display: flex;
+                gap: 0.5rem;
+                margin-top: 1rem;
+            }
+
+            .admin-actions button {
+                flex: 1;
+                padding: 0.5rem 1rem;
+                border-radius: 0.375rem;
+                font-size: 0.875rem;
+                transition: all 0.2s;
+            }
+
+            .image-preview-options {
+                display: flex;
+                gap: 0.5rem;
+                margin-top: 0.5rem;
+            }
+
+            .image-preview-options button {
+                flex: 1;
+                padding: 0.25rem 0.5rem;
+                border-radius: 0.25rem;
+                font-size: 0.75rem;
+                background-color: #f3f4f6;
+                border: 1px solid #d1d5db;
+                transition: all 0.2s;
+            }
+
+            .image-preview-options button.active {
+                background-color: #2E7D32;
+                color: white;
+                border-color: #2E7D32;
+            }
+
+            .pagination {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: 1rem;
+            }
+
+            .pagination-info {
+                font-size: 0.875rem;
+                color: #6b7280;
+            }
+
+            .pagination-controls {
+                display: flex;
+                gap: 0.5rem;
+            }
+
+            .pagination-btn {
+                width: 2rem;
+                height: 2rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 1px solid #d1d5db;
+                border-radius: 0.375rem;
+                background-color: white;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .pagination-btn:hover:not(:disabled) {
+                background-color: #f3f4f6;
+            }
+
+            .pagination-btn:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+            .rotated-image {
+                transform: rotate(90deg);
+            }
+
+            .page-number {
+                width: 2rem;
+                height: 2rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 1px solid #d1d5db;
+                border-radius: 0.375rem;
+                background-color: white;
+                cursor: pointer;
+                transition: all 0.2s;
+                font-size: 0.875rem;
+            }
+
+            .page-number.active {
+                background-color: #2E7D32;
+                color: white;
+                border-color: #2E7D32;
+            }
+
+            .page-number:hover:not(.active) {
+                background-color: #f3f4f6;
+            }
+
+            /* 修复百度地图容器样式 */
+            #baidu-map-container {
+                height: 600px;
+                width: 100%;
+                position: relative;
+                border-radius: 0.5rem;
+                overflow: hidden;
+                z-index: 1;
+            }
+
+            /* 新增：选择器地图容器样式 */
+            .baidu-map-selector-container {
+                height: 100%;
+                width: 100%;
+                position: relative;
+                border-radius: 0.5rem;
+                overflow: hidden;
+                background-color: #f9fafb;
+            }
+
+            /* 地图图例样式 */
+            .map-legend-container {
+                position: absolute;
+                bottom: 50px;
+                left: 25px;
+                z-index: 40;
+                pointer-events: none;
+            }
+
+            .map-legend {
+                background: rgba(255, 255, 255, 0.95);
+                padding: 15px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                backdrop-filter: blur(5px);
+                border: none;
+                min-width: 150px;
+                pointer-events: auto;
+            }
+
+            /* 自定义百度地图标记样式 */
+            .baidu-marker {
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 12px;
+                color: white;
+                border: none !important;
+                transition: transform 0.2s ease;
+            }
+
+            .baidu-marker:hover {
+                transform: scale(1.2);
+            }
+
+            .baidu-marker-tree {
+                background-color: #2E7D32;
+            }
+
+            .baidu-marker-shrub {
+                background-color: #4CAF50;
+            }
+
+            .baidu-marker-herb {
+                background-color: #8BC34A;
+            }
+
+            .baidu-marker-vine {
+                background-color: #CDDC39;
+            }
+
+            .baidu-marker-fern {
+                background-color: #FFC107;
+            }
+
+            .baidu-info-window {
+                padding: 10px;
+                max-width: 280px;
+                min-width: 250px;
+            }
+
+            .baidu-info-window-content {
+                display: flex;
+                gap: 10px;
+                align-items: flex-start;
+            }
+
+            .baidu-info-window-text {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .baidu-info-window-image {
+                width: 80px;
+                height: 80px;
+                object-fit: cover;
+                border-radius: 4px;
+                flex-shrink: 0;
+            }
+
+            .baidu-info-window h3 {
+                margin: 0 0 5px 0;
+                font-size: 16px;
+                font-weight: bold;
+                color: #2E7D32;
+            }
+
+            .baidu-info-window p {
+                margin: 0 0 5px 0;
+                font-size: 14px;
+                color: #666;
+            }
+
+            .baidu-info-window button {
+                background-color: #2E7D32;
+                color: white;
+                border: none;
+                padding: 5px 10px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 12px;
+                margin-top: 5px;
+                width: 100%;
+            }
+
+
+            .BMap_noprint.anchorTL {
+                z-index: 1001 !important;
+            }
+
+            .BMap_noprint.anchorBL {
+                z-index: 1001 !important;
+            }
+
+            .BMap_noprint.anchorTR {
+                z-index: 1001 !important;
+            }
+
+            .default-avatar {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #2E7D32, #4CAF50);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 2px solid rgba(255, 255, 255, 0.3);
+                color: white;
+                font-size: 12px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            }
+
+            .default-avatar:hover {
+                transform: scale(1.05);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            }
+
+            /* 滚动时的样式 */
+            .navbar-scrolled .default-avatar {
+                background: linear-gradient(135deg, #2E7D32, #4CAF50);
+                border-color: rgba(46, 125, 50, 0.3);
+            }
+
+            .plant-type {
+                border: none !important;
+                box-shadow: none !important;
+                outline: none !important;
+            }
+
+            /* 移除所有可能的外边框 */
+            .BMapLabel {
+                border: none !important;
+                background: none !important;
+            }
+
+            /* 植物详情模态框新样式 */
+            .specimen-detail {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.7);
+                z-index: 1000;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }
+
+            .specimen-detail.active {
+                display: flex;
+            }
+
+            .detail-container {
+                background: #fffdf5;
+                border: 2px solid #a68a64;
+                max-width: 900px;
+                width: 100%;
+                max-height: 90vh;
+                overflow-y: auto;
+                position: relative;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                border-radius: 12px;
+            }
+
+            .detail-header {
+                padding: 25px 30px 15px;
+                border-bottom: 2px solid #a68a64;
+                background: rgba(255, 253, 245, 0.9);
+                position: relative;
+            }
+
+            .detail-title {
+                font-family: 'Playfair Display', serif;
+                font-size: 2.5rem;
+                font-weight: 700;
+                color: #5a4634;
+                margin-bottom: 5px;
+            }
+
+            .detail-subtitle {
+                font-style: italic;
+                color: #795548;
+                font-size: 1.3rem;
+            }
+
+            .close-btn {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                background: #a68a64;
+                color: #fffdf5;
+                border: none;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                font-size: 1.5rem;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.3s ease;
+            }
+
+            .close-btn:hover {
+                background: #8a7256;
+                transform: rotate(90deg);
+            }
+
+            .detail-content {
+                padding: 30px;
+            }
+
+            .detail-top {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 30px;
+                margin-bottom: 25px;
+                align-items: start;
+            }
+
+            .detail-image-container {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: transform 0.3s ease;
+            }
+
+            .detail-image-container:hover {
+                transform: scale(1.02);
+            }
+
+            .detail-image {
+                width: 100%;
+                max-height: 400px;
+                object-fit: cover;
+                border: 2px solid #a68a64;
+                border-radius: 8px;
+                filter: sepia(0.3) contrast(1.1);
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+
+            .detail-image:hover {
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            }
+
+            .detail-info {
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+            }
+
+            .detail-info h3 {
+                font-size: 1.8rem;
+                color: #5a4634;
+                margin-bottom: 15px;
+                border-bottom: 1px dashed #a68a64;
+                padding-bottom: 5px;
+            }
+
+            .info-item {
+                margin-bottom: 12px;
+                display: flex;
+            }
+
+            .info-label {
+                font-weight: 600;
+                width: 100px;
+                color: #a68a64;
+            }
+
+            .info-value {
+                flex: 1;
+                color: #5a4037;
+            }
+
+            .description {
+                line-height: 1.7;
+                color: #5a4037;
+                padding: 20px;
+                background: rgba(166, 138, 100, 0.1);
+                border-left: 3px solid #a68a64;
+                border-radius: 0 8px 8px 0;
+                margin-bottom: 25px;
+                font-size: 1.2rem;
+            }
+
+            .map-section {
+                margin-top: 20px;
+            }
+
+            .map-container {
+                height: 300px;
+                border: 2px solid #a68a64;
+                border-radius: 8px;
+                overflow: hidden;
+                margin-top: 10px;
+            }
+
+            .more-photos-section {
+                margin-top: 25px;
+                padding-top: 20px;
+                border-top: 1px solid #e0e0e0;
+            }
+
+            .more-photos-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 15px;
+                margin-top: 15px;
+            }
+
+            .more-photo-item {
+                position: relative;
+                border-radius: 8px;
+                overflow: hidden;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                aspect-ratio: 4/3;
+            }
+
+            .more-photo-item:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            }
+
+            .more-photo-img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                border: 2px solid #a68a64;
+                border-radius: 8px;
+                filter: sepia(0.2) contrast(1.05);
+            }
+
+            .more-photo-item:hover .more-photo-img {
+                filter: sepia(0) contrast(1.1);
+            }
+
+            .pin {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                width: 20px;
+                height: 20px;
+                background: #c62828;
+                border-radius: 50%;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            }
+
+            .pin::after {
+                content: '';
+                position: absolute;
+                top: -8px;
+                left: 5px;
+                width: 10px;
+                height: 10px;
+                background: #c62828;
+                clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            }
+
+            /* 详情图片放大预览样式 */
+            .detail-image-preview {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.95);
+                z-index: 1100;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                padding: 40px;
+            }
+
+            .detail-image-preview.active {
+                display: flex;
+            }
+
+            .detail-image-preview-content {
+                position: relative;
+                max-width: 90%;
+                max-height: 90%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .detail-image-preview-img {
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
+                border-radius: 8px;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            }
+
+            .detail-image-preview-close {
+                position: absolute;
+                top: -40px;
+                right: -40px;
+                width: 40px;
+                height: 40px;
+                background: rgba(255, 255, 255, 0.2);
+                color: white;
+                border: none;
+                border-radius: 50%;
+                font-size: 1.5rem;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.3s ease;
+                backdrop-filter: blur(10px);
+            }
+
+            .detail-image-preview-close:hover {
+                background: rgba(255, 255, 255, 0.3);
+                transform: rotate(90deg);
+            }
+
+            .detail-image-preview-info {
+                position: absolute;
+                bottom: -60px;
+                left: 0;
+                right: 0;
+                text-align: center;
+                color: white;
+                font-size: 1rem;
+                padding: 10px;
+                background: rgba(0, 0, 0, 0.5);
+                border-radius: 4px;
+                backdrop-filter: blur(5px);
+            }
+
+            /* 轮播图样式 */
+            .carousel-container {
+                position: relative;
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                border-radius: 0.75rem;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            }
+
+            .carousel-slide {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                opacity: 0;
+                transition: opacity 0.5s ease-in-out;
+                border-radius: 0.75rem;
+            }
+
+            .carousel-slide.active {
+                opacity: 1;
+                z-index: 1;
+            }
+
+            .carousel-slide img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                border-radius: 0.75rem;
+            }
+
+            .carousel-indicator {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                background-color: rgba(46, 125, 50, 0.5);
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+
+            .carousel-indicator.active {
+                background-color: #2E7D32;
+                width: 30px;
+                border-radius: 5px;
+            }
+
+            /* 优化图片上传区域样式 */
+            .upload-preview-container {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                margin-top: 15px;
+            }
+
+            .upload-preview-item {
+                position: relative;
+                width: 100px;
+                height: 100px;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .upload-preview-item img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            .upload-preview-remove {
+                position: absolute;
+                top: 5px;
+                right: 5px;
+                width: 20px;
+                height: 20px;
+                background: rgba(0, 0, 0, 0.7);
+                color: white;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 12px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .upload-preview-remove:hover {
+                background: rgba(0, 0, 0, 0.9);
+                transform: scale(1.1);
+            }
+
+            .form-section {
+                background: #f8f9fa;
+                border-radius: 8px;
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+
+            .form-section-title {
+                font-size: 16px;
+                font-weight: 600;
+                color: #2E7D32;
+                margin-bottom: 10px;
+                display: flex;
+                align-items: center;
+            }
+
+            .form-section-title i {
+                margin-right: 8px;
+            }
+
+            /* 二维码预览模态框样式 */
+            .qrcode-preview {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.95);
+                z-index: 1100;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                padding: 40px;
+            }
+
+            .qrcode-preview.active {
+                display: flex;
+            }
+
+            .qrcode-preview-content {
+                position: relative;
+                max-width: 90%;
+                max-height: 90%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                background: white;
+                padding: 30px;
+                border-radius: 12px;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            }
+
+            .qrcode-preview-img {
+                max-width: 300px;
+                max-height: 300px;
+                object-fit: contain;
+                border-radius: 8px;
+                margin-bottom: 20px;
+            }
+
+            .qrcode-preview-title {
+                font-size: 1.5rem;
+                font-weight: bold;
+                color: #2E7D32;
+                margin-bottom: 10px;
+                text-align: center;
+            }
+
+            .qrcode-preview-desc {
+                font-size: 1rem;
+                color: #666;
+                text-align: center;
+                margin-bottom: 20px;
+            }
+
+            .qrcode-preview-close {
+                position: absolute;
+                top: 15px;
+                right: 15px;
+                width: 40px;
+                height: 40px;
+                background: rgba(0, 0, 0, 0.1);
+                color: #333;
+                border: none;
+                border-radius: 50%;
+                font-size: 1.5rem;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.3s ease;
+            }
+
+            .qrcode-preview-close:hover {
+                background: rgba(0, 0, 0, 0.2);
+                transform: rotate(90deg);
+            }
+
+            .qrcode-preview-info {
+                text-align: center;
+                color: #999;
+                font-size: 0.9rem;
+                margin-top: 15px;
+            }
+
+            /* 成功提示动画 */
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+
+            @keyframes slideOutRight {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+
+            /* 进度条动画 */
+            @keyframes progressBar {
+                0% {
+                    width: 100%;
+                }
+                100% {
+                    width: 0%;
+                }
+            }
+
+            .progress-bar {
+                animation: progressBar 2s linear forwards;
+            }
+
+            /* === 点赞收藏评论样式 === */
+            .plant-actions {
+                display: flex;
+                justify-content: space-around;
+                padding: 12px 0;
+                background: white;
+                border-top: 1px solid #e5e7eb;
+            }
+
+            .plant-action-btn {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px;
+                cursor: pointer;
+                font-size: 0.8rem;
+                color: #666;
+                transition: all 0.25s ease;
+                position: relative;
+                padding: 6px 10px;
+            }
+
+            .plant-action-btn:hover {
+                color: #2e7d32;
+                transform: scale(1.1);
+            }
+
+            .plant-action-btn i {
+                font-size: 1.2rem;
+                transition: transform 0.2s;
+            }
+
+            .plant-action-btn.like {
+                --heart-color: #FF5252;
+                --heart-hover-color: #FF1744;
+            }
+
+            .plant-action-btn.like i {
+                color: var(--heart-color);
+            }
+
+            .plant-action-btn.like:hover i {
+                color: var(--heart-hover-color);
+                transform: scale(1.2);
+            }
+
+            .plant-action-btn.like.active i {
+                animation: heartbeat 0.6s ease-in-out;
+            }
+
+            .plant-action-btn.favorite {
+                --bookmark-color: #FFD54F;
+                --bookmark-hover-color: #FFB300;
+            }
+
+            .plant-action-btn.favorite i {
+                color: var(--bookmark-color);
+            }
+
+            .plant-action-btn.favorite:hover i {
+                color: var(--bookmark-hover-color);
+                transform: scale(1.2) rotate(8deg);
+            }
+
+            .plant-action-btn.favorite.active i {
+                animation: bookmark-pulse 0.5s ease-in-out;
+            }
+
+            .plant-action-btn.comment {
+                --comment-color: #4FC3F7;
+                --comment-hover-color: #0288D1;
+            }
+
+            .plant-action-btn.comment i {
+                color: var(--comment-color);
+            }
+
+            .plant-action-btn.comment:hover i {
+                color: var(--comment-hover-color);
+                transform: scale(1.2) rotate(-8deg);
+            }
+
+            @keyframes heartbeat {
+                0% {
+                    transform: scale(1);
+                }
+                50% {
+                    transform: scale(1.3);
+                }
+                100% {
+                    transform: scale(1);
+                }
+            }
+            @keyframes bookmark-pulse {
+                0% {
+                    transform: scale(1);
+                }
+                50% {
+                    transform: scale(1.25);
+                }
+                100% {
+                    transform: scale(1);
+                }
+            }
+
+            /* 植物评论抽屉样式 - 改进版 */
+            .plant-comment-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(0, 0, 0, 0.5);
+                display: none;
+                justify-content: center;
+                align-items: flex-end;
+                z-index: 1000;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+
+            .plant-comment-overlay.active {
+                display: flex;
+                opacity: 1;
+            }
+
+            .plant-comment-drawer {
+                width: 100%;
+                max-width: 600px;
+                background: white;
+                border-radius: 16px 16px 0 0;
+                max-height: 85vh;
+                display: flex;
+                flex-direction: column;
+                box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
+                transform: translateY(100%);
+                transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            }
+
+            .plant-comment-overlay.active .plant-comment-drawer {
+                transform: translateY(0);
+            }
+
+            .plant-comment-header {
+                padding: 16px 20px;
+                background: linear-gradient(to right, #2e7d32, #4caf50);
+                color: white;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-radius: 16px 16px 0 0;
+            }
+
+            .plant-comment-header h3 {
+                margin: 0;
+                font-size: 18px;
+                font-weight: 600;
+            }
+
+            .close-plant-comment {
+                background: none;
+                border: none;
+                color: white;
+                font-size: 20px;
+                cursor: pointer;
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                transition: background 0.2s;
+            }
+
+            .close-plant-comment:hover {
+                background: rgba(255, 255, 255, 0.2);
+            }
+
+            .plant-comment-content {
+                flex: 1;
+                overflow-y: auto;
+                padding: 16px;
+            }
+
+            .plant-comment-input-area {
+                padding: 16px;
+                border-top: 1px solid #e5e7eb;
+                background: #f9fafb;
+            }
+
+            .plant-comment-input {
+                width: 100%;
+                padding: 12px 16px;
+                border: 1px solid #d1d5db;
+                border-radius: 8px;
+                font-size: 14px;
+                outline: none;
+                transition: border-color 0.2s;
+                background: white;
+                resize: vertical;
+                min-height: 80px;
+                font-family: inherit;
+                margin-bottom: 12px;
+            }
+
+            .plant-comment-input:focus {
+                border-color: #4caf50;
+                box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+            }
+
+            .submit-plant-comment {
+                width: 100%;
+                padding: 10px 16px;
+                background: linear-gradient(to right, #4caf50, #2e7d32);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .submit-plant-comment:hover {
+                background: linear-gradient(to right, #45a049, #1b5e20);
+                transform: translateY(-1px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            }
+
+            .plant-comments-container {
+                max-height: 400px;
+                overflow-y: auto;
+                padding-right: 8px;
+            }
+
+            .plant-comments-container::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .plant-comments-container::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 3px;
+            }
+
+            .plant-comments-container::-webkit-scrollbar-thumb {
+                background: #c1c1c1;
+                border-radius: 3px;
+            }
+
+            .plant-comments-container::-webkit-scrollbar-thumb:hover {
+                background: #a1a1a1;
+            }
+
+            /* 评论项样式 */
+            .comment-item {
+                padding: 16px 0;
+                border-bottom: 1px solid #f0f0f0;
+                animation: fadeIn 0.3s ease;
+            }
+
+            .comment-item:last-child {
+                border-bottom: none;
+            }
+
+            .comment-avatar {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                overflow: hidden;
+                flex-shrink: 0;
+                background: linear-gradient(135deg, #2E7D32, #4CAF50);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 2px solid #e5e7eb;
+            }
+
+            .comment-avatar img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            .comment-item .flex-1 {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .comment-item .font-medium {
+                font-weight: 500;
+            }
+
+            .comment-item .text-gray-800 {
+                color: #1f2937;
+            }
+
+            .comment-item .text-gray-500 {
+                color: #6b7280;
+            }
+
+            .comment-item .text-gray-700 {
+                color: #374151;
+            }
+
+            .comment-item .whitespace-pre-wrap {
+                white-space: pre-wrap;
+            }
+
+            .comment-item .break-words {
+                word-break: break-word;
+            }
+
+            .reply-comment-btn {
+                color: #059669;
+                background: none;
+                border: none;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 12px;
+                cursor: pointer;
+                transition: all 0.2s;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+            }
+
+            .reply-comment-btn:hover {
+                color: #047857;
+                background-color: #f0fdf4;
+            }
+
+            .delete-comment-btn {
+                color: #dc2626;
+                background: none;
+                border: none;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 12px;
+                cursor: pointer;
+                transition: all 0.2s;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+            }
+
+            .delete-comment-btn:hover {
+                color: #b91c1c;
+                background-color: #fef2f2;
+            }
+
+            .empty-state {
+                text-align: center;
+                padding: 40px 20px;
+            }
+
+            .empty-state i {
+                font-size: 48px;
+                margin-bottom: 16px;
+                color: #d1d5db;
+            }
+
+            .empty-state p {
+                color: #6b7280;
+                font-size: 14px;
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            /* 成功消息样式 */
+            .success-message {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background-color: #10b981;
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                transform: translateX(150%);
+                transition: transform 0.3s ease;
+            }
+
+            .success-message.show {
+                transform: translateX(0);
+            }
+
+            .success-message i {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="font-inter bg-gray-50 text-dark">
+<!-- 导航栏 -->
+<header id="navbar" class="fixed w-full z-50 transition-all duration-300 bg-transparent">
+    <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+            <button id="userAvatar" class="flex items-center focus:outline-none mr-2">
+                <div id="headerAvatar"
+                     class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center border border-white/30 overflow-hidden">
+                    <i class="fa fa-user text-white text-sm"></i>
+                </div>
+            </button>
+            <a href="#" class="flex items-center">
+                <span class="text-xl font-bold text-white text-shadow">校园植被身份证</span>
+            </a>
+        </div>
+
+        <!-- 桌面导航 -->
+        <nav class="hidden md:flex items-center space-x-8">
+            <a href="#home" class="text-white hover:text-accent transition-colors">首页</a>
+            <a href="#plants" class="text-white hover:text-accent transition-colors">植物图鉴</a>
+            <a href="#map" class="text-white hover:text-accent transition-colors">植被地图</a>
+            <a href="#map" class="text-white hover:text-accent transition-colors">植被地图</a>
+        </nav>
+
+        <!-- 搜索按钮 -->
+        <button id="searchBtn" class="hidden md:block text-white hover:text-accent transition-colors">
+            <i class="fa fa-search text-xl"></i>
+        </button>
+
+        <!-- 移动端菜单按钮 -->
+        <button id="menuBtn" class="md:hidden text-white text-2xl">
+            <i class="fa fa-bars"></i>
+        </button>
+    </div>
+
+    <!-- 移动端菜单 -->
+    <div id="mobileMenu"
+         class="md:hidden bg-white shadow-lg absolute w-full left-0 top-full transform -translate-y-full opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="container mx-auto px-4 py-3 flex flex-col space-y-4">
+            <a href="#home" class="py-2 border-b border-gray-100 hover:text-primary transition-colors">首页</a>
+            <a href="#plants" class="py-2 border-b border-gray-100 hover:text-primary transition-colors">植物图鉴</a>
+            <a href="#map" class="py-2 border-b border-gray-100 hover:text-primary transition-colors">植被地图</a>
+
+            <!-- 移动端搜索框 -->
+            <div class="relative">
+                <input type="text" placeholder="搜索植物名称、学名..."
+                       class="w-full py-2 px-4 pr-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                       id="mobileSearchInput">
+                <i class="fa fa-search absolute right-3 top-3 text-gray-400"></i>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- 搜索模态框 -->
+<div id="searchModal"
+     class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-white rounded-xl w-full max-w-2xl mx-4 p-6 transform scale-95 transition-transform duration-300">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-semibold">搜索植物</h3>
+            <button id="closeSearch" class="text-gray-500 hover:text-gray-700">
+                <i class="fa fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="relative">
+            <input type="text" placeholder="输入植物名称、学名、科属或特征..."
+                   class="w-full py-3 px-4 pr-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 text-lg"
+                   id="modalSearchInput">
+            <i class="fa fa-search absolute right-3 top-4 text-gray-400"></i>
+        </div>
+        <div class="mt-4">
+            <h4 class="text-sm font-medium text-gray-500 mb-2">热门搜索</h4>
+            <div class="flex flex-wrap gap-2">
+                <span class="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 cursor-pointer transition-colors search-tag">垂柳</span>
+                <span class="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 cursor-pointer transition-colors search-tag">海棠</span>
+                <span class="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 cursor-pointer transition-colors search-tag">月季</span>
+                <span class="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 cursor-pointer transition-colors search-tag">莲</span>
+                <span class="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 cursor-pointer transition-colors search-tag">水杉</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 英雄区域 -->
+<section id="home" class="min-h-screen flex items-center bg-gradient-to-br from-green-400 to-green-600 pt-16">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="flex flex-col md:flex-row items-center h-full">
+            <div class="md:w-1/2 mb-10 md:mb-0">
+                <h1 class="text-[clamp(2.5rem,6vw,4.5rem)] font-bold text-dark leading-tight mb-6">
+                    探索校园植物<br class="md:hidden">奇妙世界
+                </h1>
+                <p class="text-[clamp(1rem,2vw,1.25rem)] text-gray-600 max-w-2xl mb-8">
+                    通过校园植被身份证系统，了解每一株植物的故事，发现身边的自然之美
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <a href="#plants"
+                       class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-8 rounded-full transition-all shadow-lg hover:shadow-xl">
+                        浏览植物图鉴
+                    </a>
+                    <a href="#map"
+                       class="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white font-medium py-3 px-8 rounded-full transition-all border border-white/40">
+                        查看植被地图
+                    </a>
+                </div>
+            </div>
+
+            <!-- 轮播图容器  -->
+            <div class="md:w-1/2 w-full" style="height: 60vh; max-height: 400px;">
+                <div class="carousel-container rounded-xl shadow-xl transform rotate-1 hover:rotate-0 transition-transform duration-500">
+                    <!-- 轮播图片将通过JavaScript动态生成 -->
+                </div>
+                <!-- 轮播指示器 -->
+                <div id="carousel-indicators" class="flex justify-center mt-4 gap-2">
+                    <!-- 指示器将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </div>
+
+        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 text-dark animate-bounce hidden md:block">
+            <a href="#intro" class="flex flex-col items-center">
+                <span class="mb-2 text-sm">向下探索</span>
+                <i class="fa fa-chevron-down"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- 简介部分 -->
+<section id="intro" class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-dark mb-4">校园植被身份证项目</h2>
+            <p class="text-gray-600 max-w-3xl mx-auto text-lg">
+                记录校园内的每一种植物，建立数字化的植物档案，让师生更深入地了解和保护校园生态环境</p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="bg-neutral rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow text-center">
+                <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fa fa-book text-2xl text-primary"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-3">植物档案库</h3>
+                <p class="text-gray-600">建立完整的植物信息数据库，包含学名、俗名、科属、特征、生长环境等详细资料</p>
+            </div>
+
+            <div class="bg-neutral rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow text-center">
+                <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fa fa-map-marker text-2xl text-primary"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-3">位置定位</h3>
+                <p class="text-gray-600">标注每种植物在校园内的具体位置，方便师生查找和实地观察学习</p>
+            </div>
+
+            <div class="bg-neutral rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow text-center">
+                <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fa fa-graduation-cap text-2xl text-primary"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-3">教育价值</h3>
+                <p class="text-gray-600">提供丰富的植物知识，成为生物、环境等学科的户外教学资源</p>
+            </div>
+        </div>
+
+        <div class="mt-16 bg-primary/5 rounded-2xl p-8 md:p-12">
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div>
+                    <h3 class="text-2xl font-bold mb-4">校园植物统计</h3>
+                    <p class="text-gray-600 mb-6">目前我们已记录校园内<span id="total-plants-count">0</span>种植物，涵盖乔木、灌木、草本、藤本和蕨类等多种类型。
+                    </p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <div class="text-3xl font-bold text-primary mb-1" id="total-plants-display">0</div>
+                            <div class="text-gray-600">植物种类</div>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-primary mb-1">5</div>
+                            <div class="text-gray-600">植物类别</div>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-primary mb-1" id="trees-count">0</div>
+                            <div class="text-gray-600">乔木种类</div>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-primary mb-1" id="shrubs-count">0</div>
+                            <div class="text-gray-600">灌木种类</div>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-primary mb-1" id="herbs-count">0</div>
+                            <div class="text-gray-600">草本植物</div>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-primary mb-1" id="vines-count">0</div>
+                            <div class="text-gray-600">藤本与蕨类</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="h-64">
+                    <canvas id="plantChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 植物图鉴部分 -->
+<section id="plants" class="py-20 bg-neutral">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-dark mb-4">校园植物图鉴</h2>
+            <p class="text-gray-600 max-w-3xl mx-auto">探索校园内丰富多样的植物种类，了解它们的特征和生长习性</p>
+        </div>
+
+        <!-- 搜索与分类栏 -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+            <!-- 左侧搜索框 -->
+            <div class="relative w-full sm:w-1/3">
+                <input type="text" placeholder="搜索植物名称、学名、科属..."
+                       class="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                       id="plantSearchInput">
+                <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            </div>
+
+            <!-- 右侧分类按钮 -->
+            <div class="flex flex-wrap gap-2 w-full sm:w-auto justify-start sm:justify-end">
+                <button class="px-4 py-2 bg-primary text-white rounded-lg text-sm transition-colors filter-btn active"
+                        data-filter="all">全部植物
+                </button>
+                <button class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors filter-btn"
+                        data-filter="乔木">乔木
+                </button>
+                <button class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors filter-btn"
+                        data-filter="灌木">灌木
+                </button>
+                <button class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors filter-btn"
+                        data-filter="草本">草本
+                </button>
+                <button class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors filter-btn"
+                        data-filter="藤本">藤本
+                </button>
+                <button class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors filter-btn"
+                        data-filter="蕨类">蕨类
+                </button>
+            </div>
+        </div>
+
+        <!-- 植物卡片网格 -->
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" id="plantsGrid">
+            <!-- 植物卡片将通过JavaScript动态生成 -->
+        </div>
+
+        <!-- 没有结果时显示 -->
+        <div id="noResults" class="hidden text-center py-16">
+            <i class="fa fa-search text-5xl text-gray-300 mb-4"></i>
+            <p class="text-gray-500">没有找到匹配的植物，请尝试其他关键词或分类</p>
+        </div>
+
+        <!-- 加载更多按钮 -->
+        <div class="text-center mt-12">
+            <button class="bg-white border border-primary text-primary hover:bg-primary hover:text-white font-medium py-3 px-8 rounded-full transition-all"
+                    id="loadMoreBtn">
+                加载更多植物 <i class="fa fa-angle-down ml-1"></i>
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- 植物详情模态框 -->
+<div id="specimen-detail" class="specimen-detail">
+    <div class="detail-container">
+        <div class="pin"></div>
+        <div class="detail-header">
+            <button class="close-btn" id="close-detail">×</button>
+            <h2 class="detail-title" id="detail-title">植物名称</h2>
+            <p class="detail-subtitle" id="detail-subtitle">拉丁学名</p>
+        </div>
+        <div class="detail-content">
+            <div class="detail-top">
+                <div class="detail-image-container" id="detail-image-container">
+                    <img src="" alt="" class="detail-image" id="detail-image">
+                </div>
+                <div class="detail-info">
+                    <div>
+                        <h3>植物信息</h3>
+                        <div class="info-item">
+                            <span class="info-label">科：</span>
+                            <span class="info-value" id="info-family">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">属：</span>
+                            <span class="info-value" id="info-genus">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">分布：</span>
+                            <span class="info-value" id="info-distribution">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">环境：</span>
+                            <span class="info-value" id="info-environment">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">采集时间：</span>
+                            <span class="info-value" id="info-collection-date">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">添加者：</span>
+                            <span class="info-value" id="info-created-by">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="description" id="info-description">
+                -
+            </div>
+
+            <div class="map-section">
+                <h3>分布地图</h3>
+                <div id="mini-map" class="map-container"></div>
+            </div>
+
+            <!-- 更多照片区域 -->
+            <div class="more-photos-section" id="more-photos-section" style="display: none;">
+                <h3>更多照片</h3>
+                <div class="more-photos-grid" id="more-photos-grid">
+                    <!-- 更多照片将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 详情图片放大预览模态框 -->
+<div id="detail-image-preview" class="detail-image-preview">
+    <div class="detail-image-preview-content">
+        <img id="detail-image-preview-img" src="" alt="植物大图预览" class="detail-image-preview-img">
+        <button id="detail-image-preview-close" class="detail-image-preview-close">×</button>
+        <div class="detail-image-preview-info">
+            点击任意位置或按ESC键关闭预览
+        </div>
+    </div>
+</div>
+
+<!-- 图片全屏预览模态框 -->
+<div id="image-preview-modal" class="fixed inset-0 bg-black/95 z-[100] hidden flex items-center justify-center p-4">
+    <div class="relative max-w-6xl w-full h-full flex items-center justify-center">
+        <img id="fullscreen-image" src="" alt="植物大图预览"
+             class="max-w-full max-h-[90vh] object-contain opacity-0 transition-opacity duration-300">
+        <button id="close-image-preview"
+                class="absolute top-4 right-4 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors">
+            <i class="fa fa-times text-xl"></i>
+        </button>
+        <div class="absolute bottom-4 left-0 right-0 text-center text-white text-sm">
+            点击X或按ESC键关闭
+        </div>
+    </div>
+</div>
+
+<!-- 校园植被地图（百度地图版本） -->
+<section id="map" class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-dark mb-4">校园植被地图</h2>
+            <p class="text-gray-600 max-w-3xl mx-auto">探索校园内各类植物的分布情况，规划你的植物观察路线</p>
+        </div>
+
+        <div class="bg-neutral rounded-xl overflow-hidden shadow-sm">
+            <!-- 百度地图容器 -->
+            <div class="relative">
+                <div class="map-legend-container">
+                    <div class="map-legend">
+                        <h3 class="font-semibold mb-3">植物类型</h3>
+                        <div class="grid grid-cols-2 gap-2" id="map-legend">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full bg-primary mr-2"></div>
+                                <span class="text-sm">乔木</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full bg-secondary mr-2"></div>
+                                <span class="text-sm">灌木</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full bg-accent mr-2"></div>
+                                <span class="text-sm">草本</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full bg-yellow-500 mr-2"></div>
+                                <span class="text-sm">藤本</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full bg-purple-500 mr-2"></div>
+                                <span class="text-sm">蕨类</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="baidu-map-container">
+                    <!-- 地图将在这里渲染 -->
+                </div>
+            </div>
+
+            <!-- 地图下方内容区域 -->
+            <div class="p-6 relative z-10 bg-neutral">
+                <div class="flex flex-wrap gap-4 mb-6">
+                    <button class="px-4 py-2 bg-primary text-white rounded-full text-sm flex items-center transition-colors filter-map-btn active"
+                            data-filter="all">
+                        <i class="fa fa-crosshairs mr-2"></i> 显示所有植物
+                    </button>
+                    <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm flex items-center transition-colors filter-map-btn"
+                            data-filter="乔木">
+                        <i class="fa fa-tree mr-2 text-primary"></i> 只看乔木
+                    </button>
+                    <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm flex items-center transition-colors filter-map-btn"
+                            data-filter="灌木">
+                        <i class="fa fa-pagelines mr-2 text-secondary"></i> 只看灌木
+                    </button>
+                    <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm flex items-center transition-colors filter-map-btn"
+                            data-filter="草本">
+                        <i class="fa fa-leaf mr-2 text-accent"></i> 只看草本
+                    </button>
+                    <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm flex items-center transition-colors filter-map-btn"
+                            data-filter="藤本">
+                        <i class="fa fa-vine mr-2 text-yellow-500"></i> 只看藤本
+                    </button>
+                    <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm flex items-center transition-colors filter-map-btn"
+                            data-filter="蕨类">
+                        <i class="fa fa-pagelines mr-2 text-purple-500"></i> 只看蕨类
+                    </button>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-lg p-4 shadow-sm">
+                        <h3 class="font-semibold mb-2">植物分布最多的区域</h3>
+                        <ol class="space-y-2 text-gray-600" id="top-locations">
+                            <!-- 植物分布区域将通过JavaScript动态生成 -->
+                        </ol>
+                    </div>
+
+                    <div class="bg-white rounded-lg p-4 shadow-sm">
+                        <h3 class="font-semibold mb-2">植物观察推荐路线</h3>
+                        <ul class="space-y-2 text-gray-600">
+                            <li class="flex items-start">
+                                <i class="fa fa-map-signs text-primary mt-1 mr-2"></i>
+                                <span>东门 → 操场 → 校园主干路 → 图书馆 → 梅花食堂 → 西湖周边 → 文思园</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-white rounded-lg p-4 shadow-sm">
+                        <h3 class="font-semibold mb-2">当前季节推荐植物</h3>
+                        <div class="flex flex-wrap gap-2" id="seasonal-plants">
+                            <!-- 季节性植物将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 页脚 -->
+<footer class="bg-dark text-white pt-16 pb-8">
+    <div class="container mx-auto px-4">
+        <div class="grid md:grid-cols-3 gap-8 mb-12">
+            <!-- 左侧部分 -->
+            <div class="text-center md:text-left">
+                <div class="flex items-center space-x-2 mb-6 justify-center md:justify-start">
+                    <i class="fa fa-leaf text-2xl text-accent"></i>
+                    <span class="text-xl font-bold">校园植被身份证</span>
+                </div>
+                <p class="text-gray-400 mb-6">记录校园植物，传播自然知识，共建绿色校园</p>
+            </div>
+
+            <!-- 中间部分 -->
+            <div class="text-center">
+                <h3 class="text-lg font-semibold mb-6">快速链接</h3>
+                <ul class="space-y-3">
+                    <li><a href="#home" class="text-gray-400 hover:text-white transition-colors">首页</a></li>
+                    <li><a href="#plants" class="text-gray-400 hover:text-white transition-colors">植物图鉴</a></li>
+                    <li><a href="#map" class="text-gray-400 hover:text-white transition-colors">植被地图</a></li>
+                </ul>
+            </div>
+
+            <!-- 右侧部分 -->
+            <div class="text-center md:text-left md:ml-auto md:mr-8">
+                <h3 class="text-lg font-semibold mb-6">联系我们</h3>
+                <ul class="space-y-3">
+                    <!-- 可点击的QQ图标 -->
+                    <li class="flex items-start justify-center md:justify-start">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors qq-qrcode flex items-start">
+                            <i class="fa fa-qq text-accent mt-1 mr-3"></i>
+                        </a>
+                    </li>
+                    <!-- 可点击的微信图标 -->
+                    <li class="flex items-start justify-center md:justify-start">
+                        <a href="#"
+                           class="text-gray-400 hover:text-white transition-colors wechat-qrcode flex items-start">
+                            <i class="fa fa-weixin text-accent mt-1 mr-3"></i>
+                        </a>
+                    </li>
+                    <li class="flex items-start justify-center md:justify-start">
+                        <i class="fa fa-envelope text-accent mt-1 mr-3"></i>
+                        <span class="text-gray-400">2785300881@qq.com</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="border-t border-gray-800 pt-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-500 text-sm mb-4 md:mb-0">© 2025 范紫莫保留所有权利.</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- 回到顶部按钮 -->
+<button id="backToTop"
+        class="fixed bottom-6 right-6 bg-primary hover:bg-primary/90 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all opacity-0 invisible">
+    <i class="fa fa-chevron-up"></i>
+</button>
+
+<!-- 植物评论抽屉 -->
+<div id="plantCommentOverlay" class="plant-comment-overlay">
+    <div class="plant-comment-drawer">
+        <div class="plant-comment-header">
+            <h3 id="plant-comment-title">评论</h3>
+            <button class="close-plant-comment" id="closePlantCommentBtn">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+        <div class="plant-comment-content" id="plant-comments-container">
+            <!-- 评论列表将在这里动态生成 -->
+        </div>
+        <div class="plant-comment-input-area">
+            <textarea
+                    class="plant-comment-input"
+                    id="plant-comment-input"
+                    placeholder="写下你的评论..."
+                    rows="3"></textarea>
+            <button class="submit-plant-comment" id="submitPlantCommentBtn">
+                发表评论
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ========== 全局状态管理器 ==========
+    const PlantState = {
+        // 植物数据
+        plants: {},
+
+        // 互动数据
+        interactions: {
+            likes: {},      // { plantId: [usernames] }
+            favorites: {},  // { plantId: [usernames] }
+            comments: {},   // { plantId: count }
+            userData: {     // 当前用户的互动状态
+                likes: new Set(),
+                favorites: new Set()
+            }
+        },
+
+        // 当前用户
+        currentUser: localStorage.getItem('currentUser') || '',
+
+        // 更新函数
+        updatePlantInteraction(plantId, type, count, userAction = null) {
+            if (type === 'like') {
+                this.interactions.likes[plantId] = count;
+            } else if (type === 'favorite') {
+                this.interactions.favorites[plantId] = count;
+            } else if (type === 'comment') {
+                this.interactions.comments[plantId] = count;
+            }
+
+            // 更新用户个人状态
+            if (userAction !== null && this.currentUser) {
+                const plantIdNum = parseInt(plantId);
+                if (type === 'like') {
+                    if (userAction === 'add') {
+                        this.interactions.userData.likes.add(plantIdNum);
+                    } else {
+                        this.interactions.userData.likes.delete(plantIdNum);
+                    }
+                } else if (type === 'favorite') {
+                    if (userAction === 'add') {
+                        this.interactions.userData.favorites.add(plantIdNum);
+                    } else {
+                        this.interactions.userData.favorites.delete(plantIdNum);
+                    }
+                }
+            }
+
+            // 触发更新事件
+            this.dispatchUpdate();
+        },
+
+        // 获取植物互动状态
+        getPlantInteraction(plantId) {
+            const id = parseInt(plantId);
+            return {
+                likes: this.interactions.likes[id] || 0,
+                favorites: this.interactions.favorites[id] || 0,
+                comments: this.interactions.comments[id] || 0,
+                isLiked: this.interactions.userData.likes.has(id),
+                isFavorited: this.interactions.userData.favorites.has(id)
+            };
+        },
+
+        // 初始化用户数据
+        async initUserData() {
+            if (!this.currentUser) return;
+
+            try {
+                // 获取用户的点赞、收藏数据
+                const [likesResponse, favoritesResponse] = await Promise.all([
+                    supabase.from('plant_likes').select('plant_id').eq('username', this.currentUser),
+                    supabase.from('plant_favorites').select('plant_id').eq('username', this.currentUser)
+                ]);
+
+                if (likesResponse.data) {
+                    likesResponse.data.forEach(like => {
+                        this.interactions.userData.likes.add(like.plant_id);
+                    });
+                }
+
+                if (favoritesResponse.data) {
+                    favoritesResponse.data.forEach(favorite => {
+                        this.interactions.userData.favorites.add(favorite.plant_id);
+                    });
+                }
+            } catch (error) {
+                console.error('初始化用户数据失败:', error);
+            }
+        },
+
+        // 事件分发
+        dispatchUpdate() {
+            window.dispatchEvent(new CustomEvent('plantStateUpdated'));
+        }
+    };
+
+    // Supabase配置
+    const SUPABASE_URL = 'https://sgwbztuizxowiacpwzmy.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNnd2J6dHVpenhvd2lhY3B3em15Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzMzIyMDYsImV4cCI6MjA3OTkwODIwNn0.js6fUBJ9FGRMkVgp80Q-8D6hX-xXbr29rWKyJgOA9b4';
+
+    // 创建 Supabase 客户端
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('Supabase 初始化完成:', supabase);
+
+
+    // 全局变量
+    let userData = {
+        id: 1,
+        username: '',
+        fullName: '',
+        email: '',
+        phone: '',
+        department: '',
+        studentId: '',
+        bio: '',
+        role: 'user',
+        avatar: '',
+        lastLogin: ''
+    };
+    let worksData = [];
+    let plantComments = {};
+    let favoritesData = [];
+    let currentCommentPlantId = null;
+    let map = null;
+    let currentMiniMap = null;
+    let markers = [];
+    let hoverInfoWindow = null;
+
+    // ========== 页面加载时初始化 ==========
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('页面加载完成，开始初始化...');
+
+        // 初始化用户状态
+        PlantState.currentUser = localStorage.getItem('currentUser') || '';
+
+        // 加载植物数据
+        loadPlantData();
+
+        // 初始化评论功能
+        initCommentFunctionality();
+
+        // 初始化应用
+        initApp();
+    });
+
+    // ========== 核心功能函数 ==========
+
+    // 加载植物数据
+    async function loadPlantData() {
+        console.log('开始加载植物数据...');
+        PlantState.plants = await fetchPlantsFromSupabase();
+        console.log('植物数据加载完成:', Object.keys(PlantState.plants).length);
+
+        // 加载所有植物的互动数据
+        await loadAllPlantInteractions();
+    }
+
+    // 加载所有植物的互动数据
+    async function loadAllPlantInteractions() {
+        console.log('开始加载所有植物的互动数据...');
+
+        try {
+            // 初始化用户数据
+            await PlantState.initUserData();
+
+            // 批量获取所有植物的互动数量
+            const plantIds = Object.keys(PlantState.plants).map(id => parseInt(id));
+
+            if (plantIds.length === 0) {
+                console.log('没有植物数据，跳过互动数据加载');
+                return;
+            }
+
+            // 并行获取点赞、收藏、评论数量
+            const [likesData, favoritesData, commentsData] = await Promise.all([
+                getPlantInteractionCountsBatch(plantIds, 'likes'),
+                getPlantInteractionCountsBatch(plantIds, 'favorites'),
+                getPlantInteractionCountsBatch(plantIds, 'comments')
+            ]);
+
+            // 更新状态
+            plantIds.forEach(plantId => {
+                PlantState.updatePlantInteraction(plantId, 'like', likesData[plantId] || 0);
+                PlantState.updatePlantInteraction(plantId, 'favorite', favoritesData[plantId] || 0);
+                PlantState.updatePlantInteraction(plantId, 'comment', commentsData[plantId] || 0);
+            });
+
+            console.log('互动数据加载完成');
+        } catch (error) {
+            console.error('加载互动数据失败:', error);
+        }
+    }
+
+    // 批量获取互动数量
+    async function getPlantInteractionCountsBatch(plantIds, type) {
+        const tableName = type === 'likes' ? 'plant_likes' :
+            type === 'favorites' ? 'plant_favorites' : 'plant_comments';
+
+        try {
+            const {data, error} = await supabase
+                .from(tableName)
+                .select('plant_id')
+                .in('plant_id', plantIds);
+
+            if (error) throw error;
+
+            // 统计每个植物的数量
+            const counts = {};
+            if (data) {
+                data.forEach(item => {
+                    const plantId = item.plant_id;
+                    counts[plantId] = (counts[plantId] || 0) + 1;
+                });
+            }
+
+            // 确保所有植物都有计数
+            plantIds.forEach(id => {
+                if (!counts[id]) {
+                    counts[id] = 0;
+                }
+            });
+
+            return counts;
+        } catch (error) {
+            console.error(`获取${type}数据失败:`, error);
+            return {};
+        }
+    }
+
+    // 获取单个植物的互动数量
+    async function getPlantInteractionCounts(plantId) {
+        try {
+            const [likesResponse, favoritesResponse, commentsResponse] = await Promise.all([
+                supabase.from('plant_likes').select('*', {count: 'exact', head: true}).eq('plant_id', plantId),
+                supabase.from('plant_favorites').select('*', {count: 'exact', head: true}).eq('plant_id', plantId),
+                supabase.from('plant_comments').select('*', {count: 'exact', head: true}).eq('plant_id', plantId)
+            ]);
+
+            return {
+                likes: likesResponse.count || 0,
+                favorites: favoritesResponse.count || 0,
+                comments: commentsResponse.count || 0
+            };
+        } catch (error) {
+            console.error('获取植物互动数量失败:', error);
+            return {likes: 0, favorites: 0, comments: 0};
+        }
+    }
+
+    // ========== 点赞功能 ==========
+    async function handleLike(plantId, button) {
+        try {
+            const currentUser = PlantState.currentUser;
+            if (!currentUser) {
+                alert('请先登录！');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const plantIdNum = parseInt(plantId);
+            const isLiked = PlantState.interactions.userData.likes.has(plantIdNum);
+
+            if (isLiked) {
+                // 取消点赞
+                const {error} = await supabase
+                    .from('plant_likes')
+                    .delete()
+                    .eq('plant_id', plantIdNum)
+                    .eq('username', currentUser);
+
+                if (error) throw error;
+
+                PlantState.updatePlantInteraction(plantId, 'like',
+                    PlantState.interactions.likes[plantIdNum] - 1, 'remove');
+                button.classList.remove('active');
+                showSuccessMessage('已取消点赞');
+            } else {
+                // 添加点赞
+                const {error} = await supabase
+                    .from('plant_likes')
+                    .insert({
+                        plant_id: plantIdNum,
+                        username: currentUser,
+                        created_at: new Date().toISOString()
+                    });
+
+                if (error) throw error;
+
+                PlantState.updatePlantInteraction(plantId, 'like',
+                    PlantState.interactions.likes[plantIdNum] + 1, 'add');
+                button.classList.add('active');
+                showSuccessMessage('点赞成功！');
+            }
+
+        } catch (error) {
+            console.error('处理点赞失败:', error);
+            alert('操作失败，请重试！');
+        }
+    }
+
+    // ========== 收藏功能 ==========
+    async function handleFavorite(plantId, button) {
+        try {
+            const currentUser = PlantState.currentUser;
+            if (!currentUser) {
+                alert('请先登录！');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const plantIdNum = parseInt(plantId);
+            const isFavorited = PlantState.interactions.userData.favorites.has(plantIdNum);
+
+            if (isFavorited) {
+                // 取消收藏
+                const {error} = await supabase
+                    .from('plant_favorites')
+                    .delete()
+                    .eq('plant_id', plantIdNum)
+                    .eq('username', currentUser);
+
+                if (error) throw error;
+
+                PlantState.updatePlantInteraction(plantId, 'favorite',
+                    PlantState.interactions.favorites[plantIdNum] - 1, 'remove');
+                button.classList.remove('active');
+                showSuccessMessage('已取消收藏');
+            } else {
+                // 添加收藏
+                const {error} = await supabase
+                    .from('plant_favorites')
+                    .insert({
+                        plant_id: plantIdNum,
+                        username: currentUser,
+                        created_at: new Date().toISOString()
+                    });
+
+                if (error) throw error;
+
+                PlantState.updatePlantInteraction(plantId, 'favorite',
+                    PlantState.interactions.favorites[plantIdNum] + 1, 'add');
+                button.classList.add('active');
+                showSuccessMessage('收藏成功！');
+            }
+
+        } catch (error) {
+            console.error('处理收藏失败:', error);
+            alert('操作失败，请重试！');
+        }
+    }
+
+    // ========== 评论功能 ==========
+    function initCommentFunctionality() {
+        console.log('初始化评论功能...');
+
+        // 事件委托处理评论按钮点击
+        document.addEventListener('click', function (event) {
+            // 评论按钮点击
+            if (event.target.closest('.plant-action-btn.comment')) {
+                const btn = event.target.closest('.plant-action-btn.comment');
+                const plantId = parseInt(btn.getAttribute('data-plant-id'));
+
+                if (plantId) {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    // 检查是否登录
+                    if (!PlantState.currentUser) {
+                        alert('请先登录才能评论！');
+                        window.location.href = 'login.html';
+                        return;
+                    }
+
+                    openPlantCommentDrawer(plantId);
+                }
+            }
+
+            // 关闭评论抽屉按钮
+            if (event.target.closest('.close-plant-comment')) {
+                const closeBtn = event.target.closest('.close-plant-comment');
+                closePlantCommentDrawer();
+            }
+
+            // 提交评论按钮
+            if (event.target.closest('#submitPlantCommentBtn')) {
+                const plantId = currentCommentPlantId;
+                if (plantId) {
+                    submitPlantComment(plantId);
+                }
+            }
+
+            // 删除评论按钮
+            if (event.target.closest('.delete-comment-btn')) {
+                const deleteBtn = event.target.closest('.delete-comment-btn');
+                const commentId = deleteBtn.getAttribute('data-comment-id');
+                deletePlantComment(commentId);
+            }
+
+            // 回复评论按钮
+            if (event.target.closest('.reply-comment-btn')) {
+                const replyBtn = event.target.closest('.reply-comment-btn');
+                const authorName = replyBtn.getAttribute('data-author');
+                const commentInput = document.getElementById('plant-comment-input');
+                commentInput.value = `@${authorName} `;
+                commentInput.focus();
+            }
+        });
+
+        // 回车键提交评论
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                const commentInput = document.getElementById('plant-comment-input');
+                if (commentInput && commentInput === document.activeElement) {
+                    e.preventDefault();
+                    submitPlantComment(plantId);
+                }
+            }
+        });
+
+        console.log('评论功能初始化完成');
+    }
+
+    // 打开植物评论抽屉
+    async function openPlantCommentDrawer(plantId) {
+        currentCommentPlantId = plantId;
+        plantCommentDrawerOpen = true;
+
+        // 显示评论抽屉
+        const overlay = document.getElementById('plantCommentOverlay');
+        const drawer = overlay.querySelector('.plant-comment-drawer');
+
+        if (!overlay || !drawer) {
+            console.error('评论抽屉元素未找到');
+            return;
+        }
+
+        overlay.classList.add('active');
+        setTimeout(() => {
+            drawer.style.transform = 'translateY(0)';
+        }, 10);
+
+        // 设置植物名称
+        const plant = worksData.find(p => p.id == plantId) || favoritesData.find(f => f.plant_id == plantId)?.plant;
+        if (plant) {
+            const headerTitle = drawer.querySelector('.plant-comment-header h3');
+            if (headerTitle) {
+                headerTitle.textContent = `${plant.name} 的评论`;
+            }
+        }
+
+        // 加载评论
+        await loadPlantComments(plantId);
+
+        // 添加关闭按钮事件
+        const closeBtn = drawer.querySelector('.close-plant-comment');
+        if (closeBtn) {
+            closeBtn.setAttribute('data-plant-id', plantId);
+            closeBtn.onclick = () => closePlantCommentDrawer(plantId);
+        }
+
+        // 添加提交按钮事件
+        const submitBtn = drawer.querySelector('.submit-plant-comment');
+        if (submitBtn) {
+            submitBtn.onclick = () => submitPlantComment(plantId);
+        }
+
+        // 添加输入框回车事件
+        const commentInput = drawer.querySelector('.plant-comment-input');
+        if (commentInput) {
+            commentInput.onkeydown = (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    submitPlantComment(plantId);
+                }
+            };
+        }
+
+        // 阻止滚动穿透
+        document.body.style.overflow = 'hidden';
+    }
+
+    // 创建植物评论抽屉
+    function createPlantCommentDrawer() {
+        console.log('创建评论抽屉');
+        // 如果已经存在，先移除
+        const existingOverlay = document.getElementById('plantCommentOverlay');
+        if (existingOverlay) {
+            existingOverlay.remove();
+        }
+
+        const overlay = document.createElement('div');
+        overlay.id = 'plantCommentOverlay';
+        overlay.className = 'plant-comment-overlay';
+
+        overlay.innerHTML = `
+            <div class="plant-comment-drawer">
+                <div class="plant-comment-header">
+                    <h3 id="plant-comment-title">评论</h3>
+                    <button class="close-plant-comment" id="closePlantCommentBtn">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+                <div class="plant-comment-content" id="plant-comments-container">
+                    <div class="empty-state">
+                        <i class="fa fa-spinner fa-spin text-gray-300 text-4xl mb-4"></i>
+                        <p class="text-gray-500">加载评论中...</p>
+                    </div>
+                </div>
+                <div class="plant-comment-input-area">
+                    <textarea
+                            class="plant-comment-input"
+                            id="plant-comment-input"
+                            placeholder="写下你的评论..."
+                            rows="3"></textarea>
+                    <button class="submit-plant-comment" id="submitPlantCommentBtn">
+                        发表评论
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+        console.log('评论抽屉创建完成');
+    }
+
+    // 关闭植物评论抽屉
+    function closePlantCommentDrawer(plantId) {
+        plantCommentDrawerOpen = false;
+        currentCommentPlantId = null;
+
+        const overlay = document.getElementById('plantCommentOverlay');
+        const drawer = overlay.querySelector('.plant-comment-drawer');
+
+        if (!overlay || !drawer) {
+            console.error('评论抽屉元素未找到');
+            return;
+        }
+
+        drawer.style.transform = 'translateY(100%)';
+        setTimeout(() => {
+            overlay.classList.remove('active');
+            // 恢复滚动
+            document.body.style.overflow = '';
+        }, 300);
+
+        // 清理事件监听器
+        const closeBtn = drawer.querySelector('.close-plant-comment');
+        if (closeBtn) {
+            closeBtn.onclick = null;
+        }
+
+        const submitBtn = drawer.querySelector('.submit-plant-comment');
+        if (submitBtn) {
+            submitBtn.onclick = null;
+        }
+
+        const commentInput = drawer.querySelector('.plant-comment-input');
+        if (commentInput) {
+            commentInput.onkeydown = null;
+            commentInput.value = ''; // 清空输入框
+        }
+    }
+
+
+    // 快速添加评论到列表
+    function addCommentToList(comment) {
+        const container = document.getElementById('plant-comments-container');
+        if (!container) return;
+
+        // 检查是否为空状态
+        const emptyState = container.querySelector('.empty-state');
+        if (emptyState) {
+            emptyState.remove();
+        }
+
+        // 创建新评论HTML
+        const commentHTML = createCommentHTML(comment);
+
+        // 插入到列表顶部
+        const newDiv = document.createElement('div');
+        newDiv.innerHTML = commentHTML;
+        newDiv.classList.add('comment-item');
+        newDiv.style.animation = 'fadeIn 0.3s ease';
+
+        container.insertBefore(newDiv, container.firstChild);
+    }
+
+    // 加载植物评论
+    async function loadPlantComments(plantId) {
+        try {
+            const drawer = document.querySelector('.plant-comment-drawer');
+            const contentArea = drawer.querySelector('.plant-comment-content');
+
+            if (!contentArea) {
+                console.error('评论内容区域未找到');
+                return;
+            }
+
+            // 显示加载状态
+            contentArea.innerHTML = `
+            <div class="empty-state">
+                <i class="fa fa-spinner fa-spin"></i>
+                <p class="text-gray-500 mt-2">加载评论中...</p>
+            </div>
+        `;
+
+            // 从Supabase获取评论
+            const {data: comments, error} = await supabase
+                .from('plant_comments')
+                .select(`
+                *,
+                users:user_id (
+                    username,
+                    full_name,
+                    avatar
+                )
+            `)
+                .eq('plant_id', plantId)
+                .order('created_at', {ascending: false});
+
+            if (error) throw error;
+
+            // 存储评论数据
+            plantComments[plantId] = comments || [];
+
+            // 更新评论数量显示
+            updateCommentCountDisplay(plantId, comments?.length || 0);
+
+            // 渲染评论
+            renderPlantComments(plantId, comments);
+
+        } catch (error) {
+            console.error('加载评论失败:', error);
+            const contentArea = document.querySelector('.plant-comment-content');
+            if (contentArea) {
+                contentArea.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa fa-exclamation-triangle"></i>
+                    <h3 class="text-lg font-medium mb-2">加载失败</h3>
+                    <p class="text-gray-500">无法加载评论，请稍后重试</p>
+                </div>
+            `;
+            }
+        }
+    }
+    // 更新评论计数显示
+    function updateCommentCountDisplay(plantId, count) {
+        // 更新评论按钮的计数显示
+        document.querySelectorAll(`.plant-action-btn.comment[data-plant-id="${plantId}"] .comment-count`).forEach(span => {
+            span.textContent = count;
+        });
+    }
+    function formatTimeAgo(date) {
+        const now = new Date();
+        const diffMs = now - date;
+        const diffSec = Math.floor(diffMs / 1000);
+        const diffMin = Math.floor(diffSec / 60);
+        const diffHour = Math.floor(diffMin / 60);
+        const diffDay = Math.floor(diffHour / 24);
+
+        if (diffSec < 60) {
+            return '刚刚';
+        } else if (diffMin < 60) {
+            return `${diffMin}分钟前`;
+        } else if (diffHour < 24) {
+            return `${diffHour}小时前`;
+        } else if (diffDay < 7) {
+            return `${diffDay}天前`;
+        } else {
+            return date.toLocaleDateString();
+        }
+    }
+    // HTML转义函数
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // 渲染植物评论
+    function renderPlantComments(plantId, comments) {
+        const contentArea = document.querySelector('.plant-comment-content');
+        if (!contentArea) return;
+
+        if (!comments || comments.length === 0) {
+            contentArea.innerHTML = `
+            <div class="empty-state">
+                <i class="fa fa-comments"></i>
+                <h3 class="text-lg font-medium mb-2">暂无评论</h3>
+                <p class="text-gray-500">快来发表第一条评论吧！</p>
+            </div>
+        `;
+            return;
+        }
+
+        let html = '<div class="comments-list">';
+
+        comments.forEach(comment => {
+            const isOwn = comment.user_id === userData.id;
+            const commentDate = new Date(comment.created_at);
+            const timeAgo = formatTimeAgo(commentDate);
+
+            html += `
+            <div class="comment-item" data-comment-id="${comment.id}">
+                <div class="flex items-start gap-3 mb-2">
+                    <div class="comment-avatar">
+                        ${comment.users?.avatar ?
+                `<img src="${comment.users.avatar}" alt="${comment.users.full_name}" class="w-8 h-8 rounded-full">` :
+                `<i class="fa fa-user text-gray-400"></i>`
+            }
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="font-medium text-sm">${comment.users?.full_name || comment.users?.username || '匿名用户'}</div>
+                                <div class="text-xs text-gray-500">${timeAgo}</div>
+                            </div>
+                            ${isOwn ? `
+                                <button class="delete-comment-btn text-xs" data-comment-id="${comment.id}">
+                                    <i class="fa fa-trash"></i> 删除
+                                </button>
+                            ` : ''}
+                        </div>
+                        <div class="mt-2 text-sm text-gray-700">${escapeHtml(comment.content)}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        });
+
+        html += '</div>';
+        contentArea.innerHTML = html;
+
+        // 绑定删除按钮事件
+        contentArea.querySelectorAll('.delete-comment-btn').forEach(btn => {
+            btn.addEventListener('click', async function () {
+                const commentId = this.getAttribute('data-comment-id');
+                if (confirm('确定要删除这条评论吗？')) {
+                    await deletePlantCommentById(commentId, plantId);
+                }
+            });
+        });
+    }
+
+    // 创建评论HTML
+    function createCommentHTML(comment) {
+        if (!comment) return '';
+
+        // 对于新发表的评论，数据库返回的数据结构可能不同
+        let authorName, avatar;
+
+        if (comment.users) {
+            // 数据库返回的关联数据
+            authorName = comment.users.full_name || comment.users.username || comment.username || '匿名用户';
+            avatar = comment.users.avatar;
+        } else {
+            // 新发表的评论数据或直接数据
+            authorName = comment.username || '匿名用户';
+            avatar = null;
+
+            // 尝试从localStorage获取当前用户的头像
+            if (comment.username === PlantState.currentUser) {
+                const userAvatar = localStorage.getItem('userAvatar');
+                if (userAvatar) avatar = userAvatar;
+            }
+        }
+
+        // 格式化时间
+        const commentDate = new Date(comment.created_at);
+        const now = new Date();
+        const diffHours = Math.floor((now - commentDate) / (1000 * 60 * 60));
+
+        let timeStr;
+        if (diffHours < 1) {
+            timeStr = '刚刚';
+        } else if (diffHours < 24) {
+            timeStr = `${diffHours}小时前`;
+        } else {
+            timeStr = commentDate.toLocaleDateString('zh-CN');
+        }
+
+        return `
+        <div class="comment-item" data-comment-id="${comment.id}">
+            <div class="flex items-start gap-3">
+                <div class="comment-avatar flex-shrink-0">
+                    ${avatar ?
+            `<img src="${avatar}" alt="${authorName}" class="w-10 h-10 rounded-full object-cover" onerror="this.onerror=null; this.src='img/default.png';">` :
+            `<div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center text-white font-semibold">
+                            ${authorName.charAt(0).toUpperCase()}
+                        </div>`
+        }
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-start mb-1">
+                        <div class="flex items-center">
+                            <span class="font-medium text-gray-800 mr-2">${authorName}</span>
+                            <span class="text-gray-500 text-sm">${timeStr}</span>
+                        </div>
+                        ${comment.username === PlantState.currentUser ? `
+                            <button class="delete-comment-btn"
+                                    data-comment-id="${comment.id}"
+                                    title="删除评论">
+                                <i class="fa fa-trash mr-1"></i>删除
+                            </button>
+                        ` : ''}
+                    </div>
+                    <div class="text-gray-700 mb-3 whitespace-pre-wrap break-words">${comment.content || ''}</div>
+                    <div class="flex items-center gap-4 text-sm">
+                        <button class="reply-comment-btn"
+                                data-author="${authorName}">
+                            <i class="fa fa-reply mr-1"></i>回复
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    }
+
+    // 提交植物评论
+    async function submitPlantComment(plantId) {
+        const drawer = document.querySelector('.plant-comment-drawer');
+        const commentInput = drawer.querySelector('.plant-comment-input');
+        const submitBtn = drawer.querySelector('.submit-plant-comment');
+
+        if (!commentInput || !submitBtn) return;
+
+        const content = commentInput.value.trim();
+        if (!content) {
+            alert('评论内容不能为空');
+            return;
+        }
+
+        const currentUser = localStorage.getItem('currentUser');
+        if (!currentUser) {
+            alert('请先登录才能评论');
+            return;
+        }
+
+        // 禁用提交按钮
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> 提交中...';
+
+        try {
+            // 提交到数据库
+            const commentData = {
+                plant_id: currentCommentPlantId,
+                username: PlantState.currentUser,
+                content: content,
+                created_at: new Date().toISOString()
+            };
+            // 提交评论到Supabase
+            const {data: newComment, error} = await supabase
+                .from('plant_comments')
+                .insert([{
+                    plant_id: plantId,
+                    user_id: userData.id,
+                    username: userData.username,
+                    content: content,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                }])
+                .select(`
+                *,
+                users:user_id (
+                    username,
+                    full_name,
+                    avatar
+                )
+            `);
+
+            if (error) throw error;
+
+            // 清空输入框
+            commentInput.value = '';
+
+            // 重新加载评论
+            await loadPlantComments(plantId);
+
+            // 更新评论计数
+            updatePlantInteractionCounts();
+
+            // 创建通知（如果评论的不是自己的植物）
+            const plant = worksData.find(p => p.id == plantId);
+            if (plant && plant.created_by !== currentUser) {
+                await createCommentNotification(plantId, plant.name, currentUser, userData.full_name || currentUser);
+            }
+
+            showSuccessMessage('评论发表成功！');
+
+        } catch (error) {
+            console.error('提交评论失败:', error);
+            alert('评论发表失败，请稍后重试');
+        } finally {
+            // 恢复提交按钮
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '发表评论';
+        }
+    }
+    // 更新植物互动计数显示
+    async function updatePlantInteractionCounts() {
+        try {
+            const currentUser = localStorage.getItem('currentUser');
+
+            // 遍历所有植物卡片
+            document.querySelectorAll('.plant-action-btn').forEach(async (btn) => {
+                const plantId = btn.getAttribute('data-plant-id');
+                if (!plantId) return;
+
+                if (btn.classList.contains('like')) {
+                    // 获取点赞数量
+                    const likeCount = await getPlantLikeCount(plantId);
+                    const countSpan = btn.querySelector('.like-count');
+                    if (countSpan) {
+                        countSpan.textContent = likeCount;
+                    }
+
+                    // 设置活跃状态
+                    const isLiked = await checkIfUserLikedPlant(plantId, currentUser);
+                    if (isLiked) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                } else if (btn.classList.contains('favorite')) {
+                    // 获取收藏数量
+                    const favoriteCount = await getPlantFavoriteCount(plantId);
+                    const countSpan = btn.querySelector('.favorite-count');
+                    if (countSpan) {
+                        countSpan.textContent = favoriteCount;
+                    }
+
+                    // 设置活跃状态
+                    const isFavorited = await checkIfUserFavoritedPlant(plantId, currentUser);
+                    if (isFavorited) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                } else if (btn.classList.contains('comment')) {
+                    // 获取评论数量
+                    const commentCount = await getPlantCommentCount(plantId);
+                    const countSpan = btn.querySelector('.comment-count');
+                    if (countSpan) {
+                        countSpan.textContent = commentCount;
+                    }
+                }
+            });
+
+        } catch (error) {
+            console.error('更新植物互动计数失败:', error);
+        }
+    }
+    // 获取植物的点赞数量
+    async function getPlantLikeCount(plantId) {
+        try {
+            const {count, error} = await supabase
+                .from('plant_likes')
+                .select('*', {count: 'exact', head: true})
+                .eq('plant_id', plantId);
+
+            if (error) throw error;
+            return count || 0;
+        } catch (error) {
+            console.error('获取点赞数量失败:', error);
+            return 0;
+        }
+    }
+
+    // 获取植物的收藏数量
+    async function getPlantFavoriteCount(plantId) {
+        try {
+            const {count, error} = await supabase
+                .from('plant_favorites')
+                .select('*', {count: 'exact', head: true})
+                .eq('plant_id', plantId);
+
+            if (error) throw error;
+            return count || 0;
+        } catch (error) {
+            console.error('获取收藏数量失败:', error);
+            return 0;
+        }
+    }
+
+    // 获取植物的评论数量
+    async function getPlantCommentCount(plantId) {
+        try {
+            const {count, error} = await supabase
+                .from('plant_comments')
+                .select('*', {count: 'exact', head: true})
+                .eq('plant_id', plantId);
+
+            if (error) throw error;
+            return count || 0;
+        } catch (error) {
+            console.error('获取评论数量失败:', error);
+            return 0;
+        }
+    }
+    // 检查用户是否点赞了植物
+    async function checkIfUserLikedPlant(plantId, username) {
+        if (!username) return false;
+
+        try {
+            const {data, error} = await supabase
+                .from('plant_likes')
+                .select('id')
+                .eq('plant_id', plantId)
+                .eq('username', username)
+                .maybeSingle(); // 使用 maybeSingle 而不是 single
+
+            if (error && error.code !== 'PGRST116') {
+                console.error('检查点赞状态失败:', error);
+                return false;
+            }
+
+            return !!data;
+        } catch (error) {
+            console.error('检查点赞状态失败:', error);
+            return false;
+        }
+    }
+
+    // 检查用户是否收藏了植物
+    async function checkIfUserFavoritedPlant(plantId, username) {
+        if (!username) return false;
+
+        try {
+            const {data, error} = await supabase
+                .from('plant_favorites')
+                .select('id')
+                .eq('plant_id', plantId)
+                .eq('username', username)
+                .maybeSingle(); // 使用 maybeSingle 而不是 single
+
+            if (error && error.code !== 'PGRST116') {
+                console.error('检查收藏状态失败:', error);
+                return false;
+            }
+
+            return !!data;
+        } catch (error) {
+            console.error('检查收藏状态失败:', error);
+            return false;
+        }
+    }
+
+    // 删除评论
+    async function deletePlantComment(commentId) {
+        if (!commentId) return;
+
+        if (!confirm('确定要删除这条评论吗？删除后无法恢复。')) {
+            return;
+        }
+
+        if (!PlantState.currentUser) {
+            alert('请先登录');
+            return;
+        }
+
+        console.log('删除评论，评论ID:', commentId, '当前植物ID:', currentCommentPlantId);
+
+        try {
+            // 检查权限
+            const {data: comment, error: fetchError} = await supabase
+                .from('plant_comments')
+                .select('username, plant_id')
+                .eq('id', commentId)
+                .single();
+
+            if (fetchError) {
+                console.error('检查评论权限错误:', fetchError);
+                throw fetchError;
+            }
+
+            if (!comment) {
+                alert('评论不存在');
+                return;
+            }
+
+            if (comment.username !== PlantState.currentUser) {
+                alert('只能删除自己的评论');
+                return;
+            }
+
+            // 删除评论
+            const {error} = await supabase
+                .from('plant_comments')
+                .delete()
+                .eq('id', commentId);
+
+            if (error) {
+                console.error('删除评论错误:', error);
+                throw error;
+            }
+
+            console.log('评论删除成功，植物ID:', comment.plant_id);
+
+            // 立即更新评论计数
+            const oldCount = PlantState.interactions.comments[comment.plant_id] || 0;
+            PlantState.updatePlantInteraction(comment.plant_id, 'comment', Math.max(0, oldCount - 1));
+
+            // 从DOM中移除评论项
+            const commentItem = document.querySelector(`.comment-item[data-comment-id="${commentId}"]`);
+            if (commentItem) {
+                commentItem.remove();
+            }
+
+            // 如果评论列表为空，显示空状态
+            const container = document.getElementById('plant-comments-container');
+            if (container && container.children.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa fa-comments text-gray-300 text-4xl mb-4"></i>
+                        <p class="text-gray-500">暂无评论，快来第一个评论吧！</p>
+                    </div>
+                `;
+            }
+
+            showSuccessMessage('评论删除成功！');
+
+        } catch (error) {
+            console.error('删除评论失败:', error);
+            alert('删除评论失败: ' + (error.message || '请稍后重试！'));
+        }
+    }
+
+    // ========== 状态更新监听 ==========
+    window.addEventListener('plantStateUpdated', function () {
+        updateAllPlantCards();
+    });
+
+    // 更新所有植物卡片的互动显示
+    function updateAllPlantCards() {
+        document.querySelectorAll('.plant-card').forEach(card => {
+            const plantId = card.querySelector('.view-detail-btn')?.getAttribute('data-id');
+            if (!plantId) return;
+
+            const interaction = PlantState.getPlantInteraction(plantId);
+
+            // 更新点赞
+            const likeBtn = card.querySelector('.plant-action-btn.like');
+            if (likeBtn) {
+                const likeCountSpan = likeBtn.querySelector('.like-count');
+                if (likeCountSpan) {
+                    likeCountSpan.textContent = interaction.likes;
+                }
+                if (interaction.isLiked) {
+                    likeBtn.classList.add('active');
+                } else {
+                    likeBtn.classList.remove('active');
+                }
+            }
+
+            // 更新收藏
+            const favoriteBtn = card.querySelector('.plant-action-btn.favorite');
+            if (favoriteBtn) {
+                const favoriteCountSpan = favoriteBtn.querySelector('.favorite-count');
+                if (favoriteCountSpan) {
+                    favoriteCountSpan.textContent = interaction.favorites;
+                }
+                if (interaction.isFavorited) {
+                    favoriteBtn.classList.add('active');
+                } else {
+                    favoriteBtn.classList.remove('active');
+                }
+            }
+
+            // 更新评论
+            const commentBtn = card.querySelector('.plant-action-btn.comment');
+            if (commentBtn) {
+                const commentCountSpan = commentBtn.querySelector('.comment-count');
+                if (commentCountSpan) {
+                    commentCountSpan.textContent = interaction.comments;
+                }
+            }
+        });
+    }
+
+    // ========== 植物卡片生成 ==========
+    function updatePlantsGrid() {
+        const plantsGrid = document.getElementById('plantsGrid');
+        plantsGrid.innerHTML = '';
+
+        const plantIds = Object.keys(PlantState.plants).sort((a, b) => parseInt(a) - parseInt(b));
+        const displayIds = plantIds.slice(0, plantsDisplayLimit);
+
+        displayIds.forEach(id => {
+            const plant = PlantState.plants[id];
+            const interaction = PlantState.getPlantInteraction(id);
+
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-xl overflow-hidden shadow-sm card-hover group plant-card';
+            card.setAttribute('data-type', plant.category);
+            card.setAttribute('data-name', plant.name);
+            card.setAttribute('data-family', plant.family);
+            card.setAttribute('data-scientific', plant.scientific);
+
+            card.innerHTML = `
+        <!-- 植物卡片图片部分 -->
+        ${generatePlantCardImage(plant)}
+        <div class="p-5">
+            <div class="flex justify-between items-start mb-2">
+                <div>
+                    <h3 class="text-lg font-semibold plant-name">${plant.name}</h3>
+                    <span class="text-xs text-gray-500">${plant.scientific}</span>
+                </div>
+            </div>
+            <p class="text-gray-600 text-sm mb-4 line-clamp-2 plant-description">${plant.description}</p>
+            <div class="flex justify-between items-center">
+                <span class="text-xs text-gray-500"><i class="fa fa-map-marker mr-1"></i> ${plant.distribution}</span>
+                <span class="text-xs text-gray-500"><i class="fa fa-user mr-1"></i> ${plant.createdBy || '未知'}</span>
+                <button class="view-detail-btn text-primary hover:text-primary/80 text-sm font-medium" data-id="${id}">查看详情</button>
+            </div>
+        </div>
+        <!-- 点赞收藏评论区域 -->
+        <div class="plant-actions">
+            <div class="plant-action-btn like" data-plant-id="${id}">
+                <i class="fa fa-heart"></i>
+                <span class="like-count">${interaction.likes}</span>
+            </div>
+            <div class="plant-action-btn favorite" data-plant-id="${id}">
+                <i class="fa fa-bookmark"></i>
+                <span class="favorite-count">${interaction.favorites}</span>
+            </div>
+            <div class="plant-action-btn comment" data-plant-id="${id}">
+                <i class="fa fa-comment"></i>
+                <span class="comment-count">${interaction.comments}</span>
+            </div>
+        </div>
+        `;
+
+            plantsGrid.appendChild(card);
+        });
+
+        // 为"查看详情"按钮添加事件
+        document.querySelectorAll('.view-detail-btn').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const plantId = this.getAttribute('data-id');
+                showPlantDetails(plantId);
+            });
+        });
+
+        // 初始化互动按钮事件
+        initInteractionButtons();
+
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        if (plantsDisplayLimit >= Object.keys(PlantState.plants).length) {
+            loadMoreBtn.style.display = 'none';
+        } else {
+            loadMoreBtn.style.display = 'inline-flex';
+        }
+
+        filterPlants(currentSearch, currentFilter);
+    }
+
+    // 初始化互动按钮事件
+    function initInteractionButtons() {
+        // 点赞按钮事件
+        document.querySelectorAll('.plant-action-btn.like').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const plantId = this.getAttribute('data-plant-id');
+                handleLike(plantId, this);
+            });
+        });
+
+        // 收藏按钮事件
+        document.querySelectorAll('.plant-action-btn.favorite').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const plantId = this.getAttribute('data-plant-id');
+                handleFavorite(plantId, this);
+            });
+        });
+
+        // 评论按钮事件
+        document.querySelectorAll('.plant-action-btn.comment').forEach(btn => {
+            btn.addEventListener('click', async function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const plantId = this.getAttribute('data-plant-id');
+
+                // 检查是否登录
+                if (!PlantState.currentUser) {
+                    alert('请先登录才能评论！');
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                // 打开评论抽屉
+                await openPlantCommentDrawer(plantId);
+            });
+        });
+    }
+
+    // ========== 其他现有功能（保持原样） ==========
+    let currentFilter = 'all';
+    let currentSearch = '';
+    let plantsDisplayLimit = 6;
+    let plantChart = null;
+
+    // 显示成功消息
+    function showSuccessMessage(message) {
+        const successMessage = document.createElement('div');
+        successMessage.className = 'success-message show';
+        successMessage.innerHTML = `
+            <i class="fa fa-check-circle mr-2"></i>
+            <span>${message}</span>
+        `;
+
+        document.body.appendChild(successMessage);
+
+        // 3秒后自动移除
+        setTimeout(() => {
+            successMessage.classList.remove('show');
+            setTimeout(() => {
+                successMessage.remove();
+            }, 300);
+        }, 3000);
+    }
+
+    // ========== 植物照片逻辑函数 ==========
+
+    /**
+     * 获取图片URL（支持Base64和普通URL）
+     * @param {string|Array} imageData - 图片数据（Base64字符串、URL或数组）
+     * @returns {string} 处理后的图片URL
+     */
+    function getImageUrl(imageData) {
+        if (!imageData) {
+            return 'img/default.png';
+        }
+
+        // 如果是 Base64 数据，直接返回
+        if (typeof imageData === 'string' && imageData.startsWith('data:image/')) {
+            return imageData;
+        }
+
+        // 如果是普通 URL
+        if (typeof imageData === 'string' &&
+            (imageData.startsWith('http://') || imageData.startsWith('https://'))) {
+            return imageData;
+        }
+
+        // 如果是相对路径
+        if (typeof imageData === 'string' && imageData.includes('.')) {
+            return imageData.startsWith('img/') ? imageData : `img/${imageData}`;
+        }
+
+        // 默认返回
+        return 'img/default.png';
+    }
+
+    /**
+     * 处理从Supabase获取的植物图片数据
+     * @param {Object} plant - 植物数据对象
+     * @returns {Array} 处理后的图片数组
+     */
+    function processPlantImages(plant) {
+        let images = [];
+
+        // 情况1：如果 images 字段包含 Base64 数据
+        if (plant.images && typeof plant.images === 'string') {
+            try {
+                // 尝试解析 JSON
+                const parsedImages = JSON.parse(plant.images);
+                if (Array.isArray(parsedImages)) {
+                    images = parsedImages;
+                }
+            } catch (e) {
+                // 如果不是 JSON，可能是单个 Base64 字符串
+                if (plant.images.startsWith('data:image/')) {
+                    images = [plant.images];
+                }
+            }
+        }
+
+        // 情况2：如果 images 已经是数组
+        else if (Array.isArray(plant.images)) {
+            images = plant.images;
+        }
+
+        // 情况3：检查是否有 image_url 字段（Base64 数据）
+        else if (plant.image_url && typeof plant.image_url === 'string') {
+            try {
+                // 尝试解析 image_url 字段
+                const parsedImageUrl = JSON.parse(plant.image_url);
+                if (Array.isArray(parsedImageUrl)) {
+                    images = parsedImageUrl;
+                } else if (parsedImageUrl && typeof parsedImageUrl === 'string') {
+                    images = [parsedImageUrl];
+                }
+            } catch (e) {
+                // 如果不是 JSON，直接使用
+                if (plant.image_url.startsWith('data:image/')) {
+                    images = [plant.image_url];
+                }
+            }
+        }
+
+        console.log(`解析后的图片数据:`, images);
+
+        // 如果没有图片，使用默认图片
+        if (images.length === 0) {
+            images = ['img/default.png'];
+        }
+
+        return images;
+    }
+
+    /**
+     * 更新植物详情页的更多照片区域
+     * @param {Object} plant - 植物数据对象
+     */
+    function updateMorePhotosSection(plant) {
+        const morePhotosSection = document.getElementById('more-photos-section');
+        const morePhotosGrid = document.getElementById('more-photos-grid');
+
+        morePhotosGrid.innerHTML = '';
+
+        if (plant.images && plant.images.length > 1) {
+            morePhotosSection.style.display = 'block';
+
+            for (let i = 1; i < plant.images.length; i++) {
+                const photoItem = document.createElement('div');
+                photoItem.className = 'more-photo-item';
+
+                const img = document.createElement('img');
+
+                // 处理图片数据
+                let imageSrc = plant.images[i];
+                if (typeof imageSrc === 'string' && imageSrc.startsWith('data:image/')) {
+                    img.src = imageSrc;
+                } else {
+                    img.src = getImageUrl(imageSrc);
+                }
+
+                img.alt = `${plant.name} - 照片 ${i + 1}`;
+                img.className = 'more-photo-img';
+
+                // 图片加载失败处理
+                img.onerror = function () {
+                    this.onerror = null;
+                    this.src = 'img/default.png';
+                };
+
+                // 点击预览功能
+                img.addEventListener('click', function () {
+                    const clickedImage = plant.images[i];
+                    const previewImage = typeof clickedImage === 'string' && clickedImage.startsWith('data:image/')
+                        ? clickedImage
+                        : getImageUrl(clickedImage);
+                    openDetailImagePreview(previewImage);
+                });
+
+                photoItem.appendChild(img);
+                morePhotosGrid.appendChild(photoItem);
+            }
+        } else {
+            morePhotosSection.style.display = 'none';
+        }
+    }
+
+    /**
+     * 为植物卡片生成图片HTML
+     * @param {Object} plant - 植物数据对象
+     * @returns {string} 图片HTML字符串
+     */
+    function generatePlantCardImage(plant) {
+        let cardImage = 'img/default.png';
+
+        if (plant.images && plant.images.length > 0) {
+            const firstImage = plant.images[0];
+            if (typeof firstImage === 'string' && firstImage.startsWith('data:image/')) {
+                cardImage = firstImage;
+            } else {
+                cardImage = getImageUrl(firstImage);
+            }
+        }
+
+        return `
+        <div class="relative h-56 overflow-hidden">
+            <img src="${cardImage}" alt="${plant.name}"
+                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                 onerror="this.onerror=null; this.src='img/default.png';">
+            <div class="absolute top-3 right-3 bg-white/80 backdrop-blur-sm text-primary text-xs font-medium px-2 py-1 rounded plant-type">
+                ${plant.category}
+            </div>
+        </div>
+    `;
+    }
+
+    /**
+     * 为植物详情页生成主图片
+     * @param {Object} plant - 植物数据对象
+     * @returns {string} 主图片URL
+     */
+    function generateDetailMainImage(plant) {
+        let mainImage = 'img/default.png';
+        if (plant.images && plant.images.length > 0) {
+            const firstImage = plant.images[0];
+            if (typeof firstImage === 'string' && firstImage.startsWith('data:image/')) {
+                mainImage = firstImage;
+            } else {
+                mainImage = getImageUrl(firstImage);
+            }
+        }
+        return mainImage;
+    }
+
+    /**
+     * 收集轮播图图片
+     * @returns {Array} 轮播图图片数组
+     */
+    function collectCarouselImages() {
+        let plantImages = [];
+        Object.values(PlantState.plants).forEach(plant => {
+            if (plant.images && Array.isArray(plant.images)) {
+                plant.images.forEach(img => {
+                    if (img) {
+                        // 检查是否是 Base64 数据
+                        if (typeof img === 'string' && img.startsWith('data:image/')) {
+                            plantImages.push(img);
+                        } else {
+                            const imageUrl = getImageUrl(img);
+                            if (imageUrl && imageUrl !== 'img/default.png') {
+                                plantImages.push(imageUrl);
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        console.log('轮播图收集到的图片:', plantImages.length);
+
+        // 如果图片太少，添加一些默认图片
+        if (plantImages.length < 5) {
+            console.log('植物图片不足，补充默认图片');
+            // 从现有植物中随机挑选一些
+            Object.values(PlantState.plants).forEach(plant => {
+                if (plant.images && plant.images.length > 0 && plantImages.length < 5) {
+                    const firstImage = plant.images[0];
+                    if (typeof firstImage === 'string' && firstImage.startsWith('data:image/')) {
+                        plantImages.push(firstImage);
+                    } else {
+                        const imageUrl = getImageUrl(firstImage);
+                        if (imageUrl && !plantImages.includes(imageUrl)) {
+                            plantImages.push(imageUrl);
+                        }
+                    }
+                }
+            });
+        }
+
+        return plantImages.slice(0, 5);
+    }
+
+    // 从数据库获取植物数据
+    async function fetchPlantsFromSupabase() {
+        try {
+            const {data: plants, error} = await supabase
+                .from('plants')
+                .select('*')
+                .order('id', {ascending: true});
+
+            if (error) throw error;
+
+            console.log('从数据库获取的植物数据:', plants.length);
+
+            const formattedData = {};
+            plants.forEach(plant => {
+                // 处理图片数据
+                const images = processPlantImages(plant);
+
+                formattedData[plant.id] = {
+                    id: plant.id,
+                    name: plant.name,
+                    scientific: plant.scientific_name,
+                    family: plant.family,
+                    genus: plant.genus,
+                    distribution: plant.location,
+                    environment: plant.environment,
+                    description: plant.description,
+                    images: images,
+                    collectionDate: plant.collection_date,
+                    category: plant.category,
+                    location: plant.location,
+                    mapPosition: plant.map_position ? {
+                        lng: plant.map_position.lng,
+                        lat: plant.map_position.lat
+                    } : {lng: 119.053194, lat: 33.558272},
+                    createdBy: plant.created_by,
+                    created_at: plant.created_at
+                };
+            });
+
+            return formattedData;
+        } catch (error) {
+            console.error('获取植物数据失败:', error);
+            return {};
+        }
+    }
+
+    // 显示植物详情
+    function showPlantDetails(plantId) {
+        const plant = PlantState.plants[plantId];
+
+        // 获取主图片
+        const mainImage = generateDetailMainImage(plant);
+
+        document.getElementById('detail-title').textContent = plant.name;
+        document.getElementById('detail-subtitle').textContent = plant.scientific;
+        document.getElementById('info-family').textContent = plant.family;
+        document.getElementById('info-genus').textContent = plant.genus;
+        document.getElementById('info-distribution').textContent = plant.distribution;
+        document.getElementById('info-environment').textContent = plant.environment;
+        document.getElementById('info-collection-date').textContent = plant.collectionDate;
+        document.getElementById('info-created-by').textContent = plant.createdBy || '未知';
+
+        const detailImage = document.getElementById('detail-image');
+        detailImage.src = mainImage;
+        detailImage.alt = plant.name;
+
+        detailImage.onerror = function () {
+            console.error('详情图片加载失败:', this.src);
+            this.onerror = null;
+            this.src = 'img/default.png';
+        };
+
+        document.getElementById('info-description').textContent = plant.description;
+
+        updateMorePhotosSection(plant);
+
+        document.getElementById('specimen-detail').classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        updateMiniMap(plant);
+    }
+
+    async function initApp() {
+        console.log('开始初始化应用...');
+
+        updateHeaderAvatar();
+        // 更新主页头像
+        await loadUserAvatarFromDB();
+
+        // 确保植物数据已加载
+        if (Object.keys(PlantState.plants).length === 0) {
+            await loadPlantData();
+        }
+
+        // 调试：检查植物图片数据
+        console.log('植物数据检查:');
+        Object.keys(PlantState.plants).forEach(id => {
+            const plant = PlantState.plants[id];
+            console.log(`植物 ${plant.name}:`, {
+                图片数量: plant.images ? plant.images.length : 0,
+                图片数据: plant.images ? plant.images.slice(0, 2) : '无',
+                处理后的URL: plant.images && plant.images.length > 0 ? getImageUrl(plant.images[0]) : '无'
+            });
+        });
+
+        updatePlantsGrid();
+        updatePlantStatistics(calculatePlantCounts());
+        setupDetailImagePreview();
+        setupQrcodePreview();
+        initCarousel();
+        if (typeof favoritesData === 'undefined') {
+            favoritesData = [];
+        }
+        updateTopLocations();
+        updateSeasonalPlants();
+
+        // 延迟初始化主地图
+        setTimeout(() => {
+            initBaiduMap();
+        }, 1000);
+
+        console.log('应用初始化完成');
+    }
+
+    // ========== 百度地图功能 ==========
+    function initBaiduMap() {
+        const mapContainer = document.getElementById('baidu-map-container');
+        if (!mapContainer) {
+            console.error('地图容器未找到');
+            return;
+        }
+
+        if (map) {
+            console.log('地图已经初始化');
+            return;
+        }
+
+        console.log('开始初始化百度地图...');
+
+        try {
+            map = new BMap.Map("baidu-map-container");
+            const point = new BMap.Point(119.053194, 33.558272);
+
+            map.centerAndZoom(point, 17);
+            map.enableScrollWheelZoom(true);
+
+            map.addControl(new BMap.MapTypeControl({
+                mapTypes: [BMAP_NORMAL_MAP, BMAP_HYBRID_MAP]
+            }));
+
+            map.addControl(new BMap.NavigationControl({
+                type: BMAP_NAVIGATION_CONTROL_ZOOM,
+                anchor: BMAP_ANCHOR_TOP_LEFT
+            }));
+
+            map.addControl(new BMap.ScaleControl({
+                anchor: BMAP_ANCHOR_BOTTOM_LEFT
+            }));
+
+            map.addControl(new BMap.OverviewMapControl({
+                anchor: BMAP_ANCHOR_BOTTOM_RIGHT,
+                isOpen: false
+            }));
+
+            map.addEventListener("tilesloaded", function () {
+                console.log("地图加载完成，当前中心点:", map.getCenter().lng, map.getCenter().lat);
+                updateBaiduMapMarkers();
+            });
+
+            console.log("百度地图初始化完成");
+        } catch (error) {
+            console.error("地图初始化失败:", error);
+            setTimeout(() => {
+                initBaiduMap();
+            }, 1000);
+        }
+    }
+
+    // 更新百度地图标记
+    function updateBaiduMapMarkers(filter = 'all') {
+        if (!map) {
+            console.error('地图未初始化，无法更新标记');
+            return;
+        }
+
+        map.clearOverlays();
+        markers = [];
+
+        Object.keys(PlantState.plants).forEach(id => {
+            const plant = PlantState.plants[id];
+
+            if (filter !== 'all' && plant.category !== filter) {
+                return;
+            }
+
+            const point = new BMap.Point(plant.mapPosition.lng, plant.mapPosition.lat);
+            const marker = createCustomMarker(point, plant.category);
+            map.addOverlay(marker);
+
+            const infoWindow = new BMap.InfoWindow(`
+                <div class="baidu-info-window">
+                    <div class="baidu-info-window-content">
+                        <div class="baidu-info-window-text">
+                            <h3>${plant.name}</h3>
+                            <p><strong>位置:</strong> ${plant.location}</p>
+                            <p><strong>类别:</strong> ${plant.category}</p>
+                            <p><strong>添加者:</strong> ${plant.createdBy || '未知'}</p>
+                            <button onclick="showPlantDetails(${id})">查看详情</button>
+                        </div>
+                        <img src="${plant.images[0] || 'img/default.png'}" alt="${plant.name}" class="baidu-info-window-image">
+                    </div>
+                </div>
+            `, {
+                width: 280,
+                height: 150,
+                offset: new BMap.Size(0, -30)
+            });
+
+            marker.addEventListener("click", function () {
+                map.closeInfoWindow();
+                map.openInfoWindow(infoWindow, point);
+            });
+
+            let hoverTimer = null;
+            let hideTimer = null;
+
+            marker.addEventListener("mouseover", function () {
+                if (hideTimer) {
+                    clearTimeout(hideTimer);
+                    hideTimer = null;
+                }
+
+                hoverTimer = setTimeout(() => {
+                    map.closeInfoWindow();
+                    map.openInfoWindow(infoWindow, point);
+                    hoverInfoWindow = infoWindow;
+                    hoverTimer = null;
+                }, 100);
+            });
+
+            marker.addEventListener("mouseout", function () {
+                if (hoverTimer) {
+                    clearTimeout(hoverTimer);
+                    hoverTimer = null;
+                }
+
+                hideTimer = setTimeout(() => {
+                    if (hoverInfoWindow === infoWindow) {
+                        map.closeInfoWindow();
+                        hoverInfoWindow = null;
+                    }
+                    hideTimer = null;
+                }, 2000);
+            });
+
+            marker.addEventListener("mousemove", function () {
+                if (hideTimer) {
+                    clearTimeout(hideTimer);
+                    hideTimer = null;
+                }
+            });
+
+            markers.push(marker);
+        });
+    }
+
+    // 创建自定义标记
+    function createCustomMarker(point, category) {
+        const marker = new BMap.Marker(point, {});
+
+        let markerClass = 'baidu-marker-tree';
+        let iconClass = 'fa-tree';
+
+        switch (category) {
+            case '灌木':
+                markerClass = 'baidu-marker-shrub';
+                iconClass = 'fa-pagelines';
+                break;
+            case '草本':
+                markerClass = 'baidu-marker-herb';
+                iconClass = 'fa-leaf';
+                break;
+            case '藤本':
+                markerClass = 'baidu-marker-vine';
+                iconClass = 'fa-vine';
+                break;
+            case '蕨类':
+                markerClass = 'baidu-marker-fern';
+                iconClass = 'fa-pagelines';
+                break;
+        }
+
+        marker.setLabel(new BMap.Label(`<div class="baidu-marker ${markerClass}"><i class="fa ${iconClass}"></i></div>`, {
+            offset: new BMap.Size(-12, -12)
+        }));
+
+        return marker;
+    }
+
+    // 地图植物筛选按钮
+    const mapFilterButtons = document.querySelectorAll('.filter-map-btn');
+
+    mapFilterButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            mapFilterButtons.forEach(btn => {
+                btn.classList.remove('bg-primary', 'text-white');
+                btn.classList.add('bg-gray-100', 'hover:bg-gray-200');
+            });
+
+            this.classList.remove('bg-gray-100', 'hover:bg-gray-200');
+            this.classList.add('bg-primary', 'text-white');
+
+            // 清除搜索状态
+            currentSearch = '';
+
+            // 清空所有搜索框
+            const searchInputs = [
+                modalSearchInput,
+                mobileSearchInput,
+                plantSearchInput
+            ];
+
+            searchInputs.forEach(input => {
+                if (input) input.value = '';
+            });
+
+            const filter = this.getAttribute('data-filter');
+            updateBaiduMapMarkers(filter);
+
+            const legendItems = document.querySelectorAll('#map-legend > div');
+            legendItems.forEach(item => {
+                const typeText = item.querySelector('span').textContent;
+                const iconDiv = item.querySelector('div');
+
+                iconDiv.className = 'w-4 h-4 rounded-full mr-2';
+
+                if (filter === 'all') {
+                    switch (typeText) {
+                        case '乔木':
+                            iconDiv.classList.add('bg-primary');
+                            break;
+                        case '灌木':
+                            iconDiv.classList.add('bg-secondary');
+                            break;
+                        case '草本':
+                            iconDiv.classList.add('bg-accent');
+                            break;
+                        case '藤本':
+                            iconDiv.classList.add('bg-yellow-500');
+                            break;
+                        case '蕨类':
+                            iconDiv.classList.add('bg-purple-500');
+                            break;
+                    }
+                } else {
+                    if (typeText === filter) {
+                        switch (typeText) {
+                            case '乔木':
+                                iconDiv.classList.add('bg-primary', 'ring-2', 'ring-primary/50');
+                                break;
+                            case '灌木':
+                                iconDiv.classList.add('bg-secondary', 'ring-2', 'ring-secondary/50');
+                                break;
+                            case '草本':
+                                iconDiv.classList.add('bg-accent', 'ring-2', 'ring-accent/50');
+                                break;
+                            case '藤本':
+                                iconDiv.classList.add('bg-yellow-500', 'ring-2', 'ring-yellow-500/50');
+                                break;
+                            case '蕨类':
+                                iconDiv.classList.add('bg-purple-500', 'ring-2', 'ring-purple-500/50');
+                                break;
+                        }
+                    } else {
+                        switch (typeText) {
+                            case '乔木':
+                                iconDiv.classList.add('bg-primary');
+                                break;
+                            case '灌木':
+                                iconDiv.classList.add('bg-secondary');
+                                break;
+                            case '草本':
+                                iconDiv.classList.add('bg-accent');
+                                break;
+                            case '藤本':
+                                iconDiv.classList.add('bg-yellow-500');
+                                break;
+                            case '蕨类':
+                                iconDiv.classList.add('bg-purple-500');
+                                break;
+                        }
+                    }
+                }
+            });
+        });
+    });
+
+    // 更新详情页小地图
+    function updateMiniMap(plant) {
+        if (currentMiniMap) {
+            try {
+                currentMiniMap.destroy();
+                currentMiniMap = null;
+            } catch (e) {
+                console.warn("清理小地图时出现警告:", e);
+            }
+        }
+
+        const miniMapContainer = document.getElementById("mini-map");
+        if (!miniMapContainer) return;
+
+        miniMapContainer.innerHTML = '';
+
+        const mapId = `mini-map-${Date.now()}`;
+        const mapDiv = document.createElement('div');
+        mapDiv.id = mapId;
+        mapDiv.style.width = '100%';
+        mapDiv.style.height = '100%';
+        miniMapContainer.appendChild(mapDiv);
+
+        setTimeout(() => {
+            try {
+                currentMiniMap = new BMap.Map(mapId);
+                const point = new BMap.Point(plant.mapPosition.lng, plant.mapPosition.lat);
+                currentMiniMap.centerAndZoom(point, 17);
+
+                currentMiniMap.disableScrollWheelZoom();
+                currentMiniMap.disableDoubleClickZoom();
+                currentMiniMap.enableInertialDragging(false);
+                currentMiniMap.enableContinuousZoom(false);
+                currentMiniMap.disableDragging();
+
+                currentMiniMap.addControl(new BMap.NavigationControl({
+                    type: BMAP_NAVIGATION_CONTROL_SMALL,
+                    anchor: BMAP_ANCHOR_TOP_LEFT
+                }));
+
+                const marker = new BMap.Marker(point);
+                currentMiniMap.addOverlay(marker);
+
+                const infoWindow = new BMap.InfoWindow(`
+                    <div style="padding:10px;max-width:200px;">
+                        <h4 style="margin:0 0 5px 0;color:#2E7D32;">${plant.name}</h4>
+                        <p style="margin:0;font-size:12px;color:#666;">位置: ${plant.location}</p>
+                        <p style="margin:0;font-size:12px;color:#666;">类别: ${plant.category}</p>
+                        <p style="margin:0;font-size:12px;color:#666;">添加者: ${plant.createdBy || '未知'}</p>
+                    </div>
+                `);
+
+                marker.addEventListener("click", function () {
+                    currentMiniMap.openInfoWindow(infoWindow, point);
+                });
+
+                setTimeout(() => {
+                    currentMiniMap.checkResize();
+                }, 50);
+
+            } catch (error) {
+                console.error("小地图初始化失败:", error);
+            }
+        }, 100);
+    }
+
+    // ========== 用户相关功能 ==========
+    // 用户头像点击事件
+    document.getElementById('userAvatar').addEventListener('click', function () {
+        const isLoggedIn = localStorage.getItem('isLoggedIn');
+        const currentUser = localStorage.getItem('currentUser');
+        const userRole = localStorage.getItem('userRole');
+
+        if (isLoggedIn === 'true' && currentUser) {
+            showUserMenu(currentUser, userRole);
+        } else {
+            window.location.href = 'login.html';
+        }
+    });
+
+    // 更新主页头像显示
+    function updateHeaderAvatar() {
+        const headerAvatar = document.getElementById('headerAvatar');
+        const userAvatar = localStorage.getItem('userAvatar');
+        const isLoggedIn = localStorage.getItem('isLoggedIn');
+        const currentUser = localStorage.getItem('currentUser');
+
+        headerAvatar.innerHTML = '';
+
+        if (isLoggedIn === 'true' && currentUser) {
+            // 已登录
+            if (userAvatar && userAvatar !== 'null' && userAvatar !== 'undefined') {
+                // 有自定义头像，显示头像
+                const img = document.createElement('img');
+                img.src = userAvatar;
+                img.className = 'w-full h-full object-cover rounded-full';
+                img.alt = '用户头像';
+                headerAvatar.className = 'w-8 h-8 rounded-full overflow-hidden border border-white/30';
+                headerAvatar.appendChild(img);
+            } else {
+                // 没有自定义头像，显示用户名第一个字
+                headerAvatar.className = 'default-avatar';
+
+                // 获取用户名第一个字（支持中文和英文）
+                let displayText = currentUser.charAt(0).toUpperCase();
+
+                // 如果是中文用户名，取第一个字符
+                if (/[\u4e00-\u9fa5]/.test(currentUser)) {
+                    displayText = currentUser.charAt(0);
+                }
+
+                headerAvatar.innerHTML = displayText;
+            }
+        } else {
+            // 未登录，显示"登录"
+            headerAvatar.className = 'default-avatar';
+            headerAvatar.innerHTML = '登录';
+        }
+    }
+
+    // 在主页初始化时从数据库加载头像
+    async function loadUserAvatarFromDB() {
+        try {
+            const currentUser = localStorage.getItem('currentUser');
+            if (!currentUser) return;
+
+            const {data: user, error} = await supabase
+                .from('users')
+                .select('avatar')
+                .eq('username', currentUser)
+                .single();
+
+            if (error) throw error;
+
+            if (user && user.avatar) {
+                localStorage.setItem('userAvatar', user.avatar);
+                updateHeaderAvatar();
+            }
+        } catch (error) {
+            console.error('加载用户头像失败:', error);
+        }
+    }
+
+    // 显示用户菜单函数
+    function showUserMenu(username, role) {
+        const displayRole = (username === 'admin' && role === 'admin') ? 'super-admin' : role;
+
+        const menuHtml = `
+            <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+                <div class="bg-white rounded-xl p-6 max-w-sm w-full mx-4">
+                    <h3 class="text-lg font-semibold mb-4">用户信息</h3>
+                    <p class="mb-2">欢迎，${username}！</p>
+                    <p class="mb-4 text-sm text-gray-600">角色：${displayRole === 'super-admin' ? '超级管理员' : (displayRole === 'admin' ? '管理员' : '普通用户')}</p>
+                    <div class="flex flex-col gap-2">
+                        <button onclick="openProfilePage()" class="w-full bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center">
+                            <i class="fa fa-user mr-2"></i> 个人信息
+                        </button>
+                        <div class="flex gap-2">
+                            <button onclick="logout()" class="flex-1 bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition-colors">
+                                退出登录
+                            </button>
+                            <button onclick="closeUserMenu()" class="flex-1 bg-gray-300 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors">
+                                关闭
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const menuDiv = document.createElement('div');
+        menuDiv.innerHTML = menuHtml;
+        menuDiv.id = 'userMenuModal';
+        document.body.appendChild(menuDiv);
+    }
+
+    function openProfilePage() {
+        closeUserMenu();
+        window.location.href = 'my.html';
+    }
+
+    // 关闭用户菜单
+    function closeUserMenu() {
+        const menu = document.getElementById('userMenuModal');
+        if (menu) {
+            menu.remove();
+        }
+    }
+
+    // 退出登录
+    function logout() {
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userAvatar');
+        PlantState.currentUser = '';
+        closeUserMenu();
+        updateHeaderAvatar();
+        alert('已退出登录');
+        location.reload();
+    }
+
+    // ========== 轮播图功能 ==========
+    const carouselConfig = {
+        interval: 5000,
+        currentSlide: 0
+    };
+
+    let carouselInterval = null;
+
+    function initCarousel() {
+        const carouselContainer = document.querySelector('.carousel-container');
+        const indicatorsContainer = document.getElementById('carousel-indicators');
+
+        if (carouselContainer) {
+            carouselContainer.innerHTML = '';
+        }
+        if (indicatorsContainer) {
+            indicatorsContainer.innerHTML = '';
+        }
+
+        const images = collectCarouselImages();
+
+        images.forEach((src, index) => {
+            const finalSrc = src;
+
+            if (carouselContainer) {
+                const slide = document.createElement('div');
+                slide.className = `carousel-slide ${index === 0 ? 'active' : ''}`;
+
+                const img = document.createElement('img');
+                img.src = finalSrc;
+                img.alt = `植物图片 ${index + 1}`;
+                img.className = 'w-full h-full object-fit: cover';
+
+                // Base64 图片通常不需要 onerror 处理，但为了安全还是加上
+                img.onerror = function () {
+                    console.error(`图片加载失败: ${finalSrc.substring(0, 50)}...`);
+                    this.src = 'img/default.png';
+                };
+
+                slide.appendChild(img);
+                carouselContainer.appendChild(slide);
+            }
+
+            if (indicatorsContainer) {
+                const indicator = document.createElement('div');
+                indicator.className = `carousel-indicator ${index === 0 ? 'active' : ''}`;
+                indicator.addEventListener('click', () => goToSlide(index));
+                indicatorsContainer.appendChild(indicator);
+            }
+        });
+
+        startCarousel();
+    }
+
+    // 开始轮播
+    function startCarousel() {
+        if (carouselInterval) {
+            clearInterval(carouselInterval);
+        }
+
+        carouselInterval = setInterval(() => {
+            const slides = document.querySelectorAll('.carousel-slide');
+            if (slides.length > 0) {
+                const nextSlide = (carouselConfig.currentSlide + 1) % slides.length;
+                goToSlide(nextSlide);
+            }
+        }, carouselConfig.interval);
+    }
+
+    // 切换到指定幻灯片
+    function goToSlide(index) {
+        const slides = document.querySelectorAll('.carousel-slide');
+        const indicators = document.querySelectorAll('.carousel-indicator');
+
+        if (slides.length === 0 || indicators.length === 0) return;
+
+        slides[carouselConfig.currentSlide].classList.remove('active');
+        indicators[carouselConfig.currentSlide].classList.remove('active');
+
+        carouselConfig.currentSlide = index;
+
+        slides[carouselConfig.currentSlide].classList.add('active');
+        indicators[carouselConfig.currentSlide].classList.add('active');
+    }
+
+    // ========== 图片预览功能 ==========
+    // 详情图片放大预览功能
+    const detailImagePreview = document.getElementById('detail-image-preview');
+    const detailImagePreviewImg = document.getElementById('detail-image-preview-img');
+    const detailImagePreviewClose = document.getElementById('detail-image-preview-close');
+    const detailImageContainer = document.getElementById('detail-image-container');
+    const detailImage = document.getElementById('detail-image');
+
+    // 设置详情图片预览功能
+    function setupDetailImagePreview() {
+        detailImageContainer.addEventListener('click', function (e) {
+            e.stopPropagation();
+            openDetailImagePreview();
+        });
+
+        detailImage.addEventListener('click', function (e) {
+            e.stopPropagation();
+            openDetailImagePreview();
+        });
+
+        detailImagePreviewClose.addEventListener('click', closeDetailImagePreview);
+
+        detailImagePreview.addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeDetailImagePreview();
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && detailImagePreview.classList.contains('active')) {
+                closeDetailImagePreview();
+            }
+        });
+    }
+
+    function openDetailImagePreview(imageSrc) {
+        const detailImagePreview = document.getElementById('detail-image-preview');
+        const detailImagePreviewImg = document.getElementById('detail-image-preview-img');
+
+        if (imageSrc) {
+            detailImagePreviewImg.src = imageSrc;
+            detailImagePreview.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeDetailImagePreview() {
+        const detailImagePreview = document.getElementById('detail-image-preview');
+        if (detailImagePreview) {
+            detailImagePreview.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    }
+
+    // ========== 二维码预览功能 ==========
+    function setupQrcodePreview() {
+        document.querySelector('.wechat-qrcode')?.addEventListener('click', function (e) {
+            e.preventDefault();
+            openQrcodePreview('微信二维码', '扫描二维码联系我们微信', 'img/wx.jpg');
+        });
+
+        document.querySelector('.qq-qrcode')?.addEventListener('click', function (e) {
+            e.preventDefault();
+            openQrcodePreview('QQ二维码', '扫描二维码联系我们的QQ', 'img/qq.jpg');
+        });
+
+        document.getElementById('qrcode-preview-close')?.addEventListener('click', closeQrcodePreview);
+
+        document.getElementById('qrcode-preview')?.addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeQrcodePreview();
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && document.getElementById('qrcode-preview')?.classList.contains('active')) {
+                closeQrcodePreview();
+            }
+        });
+    }
+
+    function openQrcodePreview(title, desc, imageSrc) {
+        const qrcodePreview = document.getElementById('qrcode-preview');
+        const qrcodeTitle = document.getElementById('qrcode-title');
+        const qrcodeDesc = document.getElementById('qrcode-desc');
+        const qrcodePreviewImg = document.getElementById('qrcode-preview-img');
+
+        if (qrcodeTitle) qrcodeTitle.textContent = title;
+        if (qrcodeDesc) qrcodeDesc.textContent = desc;
+        if (qrcodePreviewImg) qrcodePreviewImg.src = imageSrc;
+        if (qrcodePreview) {
+            qrcodePreview.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeQrcodePreview() {
+        const qrcodePreview = document.getElementById('qrcode-preview');
+        if (qrcodePreview) {
+            qrcodePreview.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    }
+
+    // ========== 导航栏滚动效果 ==========
+    const navbar = document.getElementById('navbar');
+    const backToTop = document.getElementById('backToTop');
+
+    window.addEventListener('scroll', function () {
+        if (window.scrollY > 100) {
+            navbar.classList.add('bg-white', 'shadow-md');
+            navbar.classList.remove('bg-transparent');
+
+            document.querySelector('#navbar span').classList.remove('text-white');
+            document.querySelector('#navbar span').classList.add('text-dark');
+
+            document.querySelector('#searchBtn').classList.remove('text-white');
+            document.querySelector('#searchBtn').classList.add('text-dark');
+
+            document.querySelectorAll('#navbar a').forEach(link => {
+                link.classList.remove('text-white');
+                link.classList.add('text-dark');
+            });
+
+            document.querySelector('#menuBtn').classList.remove('text-white');
+            document.querySelector('#menuBtn').classList.add('text-dark');
+
+            backToTop.classList.remove('opacity-0', 'invisible');
+            backToTop.classList.add('opacity-100', 'visible');
+        } else {
+            navbar.classList.remove('bg-white', 'shadow-md');
+            navbar.classList.add('bg-transparent');
+
+            document.querySelector('#navbar span').classList.remove('text-dark');
+            document.querySelector('#navbar span').classList.add('text-white');
+
+            document.querySelector('#searchBtn').classList.remove('text-dark');
+            document.querySelector('#searchBtn').classList.add('text-white');
+
+            document.querySelectorAll('#navbar a').forEach(link => {
+                link.classList.remove('text-dark');
+                link.classList.add('text-white');
+            });
+
+            document.querySelector('#menuBtn').classList.remove('text-dark');
+            document.querySelector('#menuBtn').classList.add('text-white');
+
+            backToTop.classList.add('opacity-0', 'invisible');
+            backToTop.classList.remove('opacity-100', 'visible');
+        }
+    });
+
+    // ========== 移动端菜单 ==========
+    const menuBtn = document.getElementById('menuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    menuBtn.addEventListener('click', function () {
+        if (mobileMenu.classList.contains('opacity-0')) {
+            mobileMenu.classList.remove('opacity-0', '-translate-y-full', 'pointer-events-none');
+            mobileMenu.classList.add('opacity-100', 'translate-y-0', 'pointer-events-auto');
+            menuBtn.innerHTML = '<i class="fa fa-times"></i>';
+        } else {
+            mobileMenu.classList.add('opacity-0', '-translate-y-full', 'pointer-events-none');
+            mobileMenu.classList.remove('opacity-100', 'translate-y-0', 'pointer-events-auto');
+            menuBtn.innerHTML = '<i class="fa fa-bars"></i>';
+        }
+    });
+
+    // ========== 搜索功能 ==========
+    const searchBtn = document.getElementById('searchBtn');
+    const searchModal = document.getElementById('searchModal');
+    const closeSearch = document.getElementById('closeSearch');
+    const modalSearchInput = document.getElementById('modalSearchInput');
+    const mobileSearchInput = document.getElementById('mobileSearchInput');
+    const plantSearchInput = document.getElementById('plantSearchInput');
+    const searchTags = document.querySelectorAll('.search-tag');
+
+    // 在打开搜索模态框时添加搜索按钮
+    searchBtn.addEventListener('click', function () {
+        searchModal.classList.remove('opacity-0', 'pointer-events-none');
+        searchModal.classList.add('opacity-100', 'pointer-events-auto');
+        document.body.style.overflow = 'hidden';
+
+        // 聚焦到搜索输入框
+        setTimeout(() => {
+            document.getElementById('modalSearchInput').focus();
+        }, 100);
+
+        // 添加搜索按钮到模态框
+        setTimeout(addModalSearchButton, 10);
+    });
+    // 移动端搜索框也需要类似处理
+    mobileSearchInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const searchText = this.value.trim();
+            if (searchText) {
+                currentSearch = searchText.toLowerCase();
+                filterPlants(currentSearch, currentFilter);
+
+                // 关闭移动端菜单
+                if (!mobileMenu.classList.contains('opacity-0')) {
+                    menuBtn.click();
+                }
+
+                // 跳转到植物图鉴区域
+                document.getElementById('plants').scrollIntoView({behavior: 'smooth'});
+            }
+        }
+    });
+
+    // 移动端搜索图标点击事件
+    const mobileSearchIcon = mobileSearchInput.parentElement.querySelector('.fa-search');
+    if (mobileSearchIcon) {
+        mobileSearchIcon.style.cursor = 'pointer';
+        mobileSearchIcon.addEventListener('click', function () {
+            const searchText = mobileSearchInput.value.trim();
+            if (searchText) {
+                currentSearch = searchText.toLowerCase();
+                filterPlants(currentSearch, currentFilter);
+
+                // 关闭移动端菜单
+                if (!mobileMenu.classList.contains('opacity-0')) {
+                    menuBtn.click();
+                }
+
+                // 跳转到植物图鉴区域
+                document.getElementById('plants').scrollIntoView({behavior: 'smooth'});
+            }
+        });
+    }
+
+    closeSearch.addEventListener('click', closeSearchModal);
+
+    // 点击模态框背景关闭
+    searchModal.addEventListener('click', function (e) {
+        if (e.target === searchModal) {
+            closeSearchModal();
+        }
+    });
+
+    // ESC键关闭搜索模态框
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && searchModal.classList.contains('opacity-100')) {
+            closeSearchModal();
+        }
+    });
+
+    // 搜索标签点击事件 - 立即搜索并跳转
+    searchTags.forEach(tag => {
+        tag.addEventListener('click', function () {
+            const searchText = this.textContent;
+            modalSearchInput.value = searchText;
+
+            // 关闭搜索模态框
+            closeSearchModal();
+
+            // 执行搜索并跳转
+            performSearchAndJump(searchText);
+        });
+    });
+
+    // 执行搜索并跳转到植物图鉴
+    function performSearchAndJump(searchText) {
+        currentSearch = searchText.toLowerCase().trim();
+        filterPlants(currentSearch, currentFilter);
+
+        // 跳转到植物图鉴区域
+        document.getElementById('plants').scrollIntoView({behavior: 'smooth'});
+    }
+
+    // 搜索输入框事件
+    function setupSearchInput(inputElement) {
+        let isModalInput = inputElement === modalSearchInput;
+
+        inputElement.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+
+                const searchText = this.value.trim();
+                if (searchText) {
+                    currentSearch = searchText.toLowerCase();
+                    filterPlants(currentSearch, currentFilter);
+
+                    if (isModalInput) {
+                        closeSearchModal();  // 使用通用关闭函数
+                    }
+                    document.getElementById('plants').scrollIntoView({behavior: 'smooth'});
+                }
+            }
+        });
+
+        if (inputElement === plantSearchInput) {
+            // 添加搜索图标点击事件
+            const searchIcon = inputElement.parentElement.querySelector('.fa-search');
+            if (searchIcon) {
+                searchIcon.style.cursor = 'pointer';
+                searchIcon.addEventListener('click', function () {
+                    const searchText = inputElement.value.trim();
+                    if (searchText) {
+                        currentSearch = searchText.toLowerCase();
+                        filterPlants(currentSearch, currentFilter);
+                    }
+                });
+            }
+        }
+    }
+
+    setupSearchInput(modalSearchInput);
+    setupSearchInput(mobileSearchInput);
+    setupSearchInput(plantSearchInput);
+
+    function addModalSearchButton() {
+        // 检查是否已存在搜索按钮
+        if (!document.querySelector('#searchModal .search-action-button')) {
+            const searchContainer = modalSearchInput.parentElement;
+            const searchButton = document.createElement('button');
+            searchButton.className = 'absolute right-3 top-1/2 transform -translate-y-1/2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors search-action-button';
+            searchButton.innerHTML = '<i class="fa fa-search"></i> 搜索';
+            searchButton.style.zIndex = '10';
+
+            // 添加按钮点击事件
+            searchButton.addEventListener('click', handleModalSearch);
+
+            // 调整输入框的padding，为按钮腾出空间
+            modalSearchInput.style.paddingRight = '80px';
+
+            // 插入搜索按钮
+            searchContainer.appendChild(searchButton);
+        }
+    }
+
+    // 新增：处理模态框搜索的函数
+    function handleModalSearch() {
+        const searchText = modalSearchInput.value.trim();
+        if (searchText) {
+            // 执行搜索
+            currentSearch = searchText.toLowerCase();
+            filterPlants(currentSearch, currentFilter);
+
+            // 关闭搜索模态框
+            closeSearchModal();
+
+            // 跳转到植物图鉴区域
+            document.getElementById('plants').scrollIntoView({behavior: 'smooth'});
+        }
+    }
+
+    // 新增：关闭搜索模态框的通用函数
+    function closeSearchModal() {
+        searchModal.classList.remove('opacity-100', 'pointer-events-auto');
+        searchModal.classList.add('opacity-0', 'pointer-events-none');
+        document.body.style.overflow = 'auto';
+    }
+
+    // ========== 植物分类筛选 ==========
+    const filterButtons = document.querySelectorAll('.filter-btn');
+
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            filterButtons.forEach(btn => {
+                btn.classList.remove('bg-primary', 'text-white');
+                btn.classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-300');
+            });
+
+            this.classList.remove('bg-white', 'text-gray-700', 'border', 'border-gray-300');
+            this.classList.add('bg-primary', 'text-white');
+
+            // 清除搜索状态
+            currentSearch = '';
+
+            // 清空所有搜索框
+            const searchInputs = [
+                modalSearchInput,
+                mobileSearchInput,
+                plantSearchInput
+            ];
+
+            searchInputs.forEach(input => {
+                if (input) input.value = '';
+            });
+
+            // 更新当前筛选
+            currentFilter = this.getAttribute('data-filter');
+
+            // 执行筛选（不包含搜索内容）
+            filterPlants('', currentFilter);
+        });
+    });
+
+    // 植物筛选函数
+    function filterPlants(searchText, filter) {
+        const plantCards = document.querySelectorAll('.plant-card');
+        let hasResults = false;
+        let counts = {
+            total: 0,
+            乔木: 0,
+            灌木: 0,
+            草本: 0,
+            藤本: 0,
+            蕨类: 0
+        };
+
+        plantCards.forEach(card => {
+            const name = card.getAttribute('data-name').toLowerCase();
+            const family = card.getAttribute('data-family').toLowerCase();
+            const type = card.getAttribute('data-type');
+            const scientific = card.getAttribute('data-scientific').toLowerCase();
+            const description = card.querySelector('.plant-description').textContent.toLowerCase();
+
+            const matchesSearch = searchText === '' ||
+                name.includes(searchText) ||
+                family.includes(searchText) ||
+                type.includes(searchText) ||
+                scientific.includes(searchText) ||
+                description.includes(searchText);
+
+            const matchesFilter = filter === 'all' || type === filter;
+
+            if (matchesSearch && matchesFilter) {
+                card.style.display = 'block';
+                hasResults = true;
+                counts.total++;
+                counts[type]++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        updatePlantStatistics(counts);
+        document.getElementById('noResults').style.display = hasResults ? 'none' : 'flex';
+    }
+
+    // ========== 植物统计和图表 ==========
+    function updatePlantStatistics(counts) {
+        document.getElementById('total-plants-count').textContent = counts.total;
+        document.getElementById('total-plants-display').textContent = counts.total;
+        document.getElementById('trees-count').textContent = counts.乔木;
+        document.getElementById('shrubs-count').textContent = counts.灌木;
+        document.getElementById('herbs-count').textContent = counts.草本;
+        document.getElementById('vines-count').textContent = counts.藤本 + counts.蕨类;
+
+        if (!plantChart) {
+            const ctx = document.getElementById('plantChart').getContext('2d');
+            plantChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['乔木', '灌木', '草本', '藤本', '蕨类'],
+                    datasets: [{
+                        data: [counts.乔木, counts.灌木, counts.草本, counts.藤本, counts.蕨类],
+                        backgroundColor: [
+                            '#2E7D32',
+                            '#4CAF50',
+                            '#8BC34A',
+                            '#CDDC39',
+                            '#FFC107'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+        } else {
+            plantChart.data.datasets[0].data = [
+                counts.乔木,
+                counts.灌木,
+                counts.草本,
+                counts.藤本,
+                counts.蕨类
+            ];
+            plantChart.update();
+        }
+    }
+
+    // 计算植物统计数据
+    function calculatePlantCounts() {
+        let counts = {
+            total: 0,
+            乔木: 0,
+            灌木: 0,
+            草本: 0,
+            藤本: 0,
+            蕨类: 0
+        };
+
+        Object.keys(PlantState.plants).forEach(id => {
+            const plant = PlantState.plants[id];
+            counts.total++;
+            counts[plant.category]++;
+        });
+
+        return counts;
+    }
+
+    // 关闭详情页面
+    function closeDetailPanel() {
+        document.getElementById('specimen-detail').classList.remove('active');
+        document.body.style.overflow = 'auto';
+
+        if (currentMiniMap) {
+            try {
+                currentMiniMap.destroy();
+                currentMiniMap = null;
+            } catch (e) {
+                console.warn("清理小地图时出现警告:", e);
+            }
+        }
+    }
+
+    // 事件监听
+    document.getElementById('close-detail').addEventListener('click', closeDetailPanel);
+
+    document.getElementById('specimen-detail').addEventListener('click', function (e) {
+        if (e.target === this) {
+            closeDetailPanel();
+        }
+    });
+
+    // ========== 回到顶部功能 ==========
+    backToTop.addEventListener('click', function () {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+
+    // ========== 平滑滚动 ==========
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            if (!mobileMenu.classList.contains('opacity-0')) {
+                menuBtn.click();
+            }
+
+            const targetId = this.getAttribute('href');
+            if (targetId === '#') return;
+
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                targetElement.scrollIntoView({behavior: 'smooth'});
+            }
+        });
+    });
+
+    // ========== 计算植物统计数据 ==========
+    function calculatePlantCounts() {
+        let counts = {
+            total: 0,
+            乔木: 0,
+            灌木: 0,
+            草本: 0,
+            藤本: 0,
+            蕨类: 0
+        };
+
+        Object.keys(PlantState.plants).forEach(id => {
+            const plant = PlantState.plants[id];
+            counts.total++;
+            counts[plant.category]++;
+        });
+
+        return counts;
+    }
+
+    // ========== 更新顶部位置 ==========
+    function updateTopLocations() {
+        const topLocationsContainer = document.getElementById('top-locations');
+        topLocationsContainer.innerHTML = '';
+
+        const locationCounts = {};
+
+        Object.values(PlantState.plants).forEach(plant => {
+            const location = plant.location || plant.distribution || '未知区域';
+            locationCounts[location] = (locationCounts[location] || 0) + 1;
+        });
+
+        const sortedLocations = Object.entries(locationCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3);
+
+        sortedLocations.forEach(([location, count], index) => {
+            const li = document.createElement('li');
+            li.className = 'flex items-center justify-between';
+            li.innerHTML = `
+            <span class="flex items-center">
+            <span class="w-6 h-6 bg-primary/20 text-primary text-xs rounded-full flex items-center justify-center mr-2">${index + 1}</span>
+            ${location}
+            </span>
+            <span class="text-primary font-medium">${count}种</span>
+            `;
+            topLocationsContainer.appendChild(li);
+        });
+    }
+
+    // ========== 更新季节性植物推荐 ==========
+    function updateSeasonalPlants() {
+        const seasonalPlantsContainer = document.getElementById('seasonal-plants');
+        seasonalPlantsContainer.innerHTML = '';
+
+        const currentMonth = new Date().getMonth() + 1;
+        let season = '';
+        let seasonalPlants = [];
+
+        if (currentMonth >= 3 && currentMonth <= 5) {
+            season = '春季';
+            seasonalPlants = Object.values(PlantState.plants).filter(plant =>
+                ['垂柳', '海棠', '月季', '红花酢浆草', '蒲公英'].includes(plant.name)
+            );
+        } else if (currentMonth >= 6 && currentMonth <= 8) {
+            season = '夏季';
+            seasonalPlants = Object.values(PlantState.plants).filter(plant =>
+                ['莲', '美人蕉', '池杉', '水杉', '竹'].includes(plant.name)
+            );
+        } else if (currentMonth >= 9 && currentMonth <= 11) {
+            season = '秋季';
+            seasonalPlants = Object.values(PlantState.plants).filter(plant =>
+                ['无患子', '池杉', '水杉', '鹅掌楸', '榔榆'].includes(plant.name)
+            );
+        } else {
+            season = '冬季';
+            seasonalPlants = Object.values(PlantState.plants).filter(plant =>
+                ['竹', '榔榆', '鹅掌楸', '桑树', '繁缕'].includes(plant.name)
+            );
+        }
+
+        if (seasonalPlants.length === 0) {
+            const defaultPlantsBySeason = {
+                '春季': ['垂柳', '海棠', '月季'],
+                '夏季': ['莲', '美人蕉', '红花酢浆草'],
+                '秋季': ['无患子', '池杉', '水杉'],
+                '冬季': ['竹', '榔榆', '鹅掌楸']
+            };
+
+            const defaultPlantNames = defaultPlantsBySeason[season] || ['垂柳', '海棠', '月季'];
+
+            defaultPlantNames.forEach(plantName => {
+                const plant = Object.values(PlantState.plants).find(p => p.name === plantName);
+                if (plant) {
+                    seasonalPlants.push(plant);
+                }
+            });
+        }
+
+        seasonalPlants = seasonalPlants.slice(0, 6);
+
+        seasonalPlants.forEach(plant => {
+            const tag = document.createElement('span');
+            tag.className = 'px-3 py-1 bg-primary/10 text-primary rounded-full text-sm hover:bg-primary/20 transition-colors cursor-pointer seasonal-plant-tag';
+            tag.textContent = plant.name;
+            tag.setAttribute('data-id', Object.keys(PlantState.plants).find(id => PlantState.plants[id] === plant));
+
+            tag.addEventListener('click', function () {
+                const plantId = this.getAttribute('data-id');
+                showPlantDetails(plantId);
+                document.getElementById('plants').scrollIntoView({behavior: 'smooth'});
+            });
+
+            seasonalPlantsContainer.appendChild(tag);
+        });
+    }
+
+    // ========== 页面加载完成后初始化应用 ==========
+    window.addEventListener('load', initApp);
+</script>
+</body>
+</html>
